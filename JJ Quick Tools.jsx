@@ -40,6 +40,7 @@ searchField.onActivate = function() {
         {category:"Animate In", name:"Slide in from Left"},
         {category:"Animate In", name:"Slide in from Right"},
         {category:"Animate In", name:"Slide in from Bottom"},
+        {category:"Animate In", name:"Slide in from Random"},
 		{category:"Animate In", name:"Smooth Linear Wipe"},
         {category:"Animate In", name:"Card In"},
         {category:"Animate Out", name:"Fade Out"},
@@ -49,6 +50,8 @@ searchField.onActivate = function() {
         {category:"Emphasis", name:"Quick Light Sweep"},
         {category:"Emphasis", name:"Pulse Scale"},
 		{category:"Emphasis", name:"Grow Over Time"},
+		{category:"Emphasis", name:"Glow (Quick)"},
+		{category:"Emphasis", name:"Glow (Intense)"},
         {category:"Color Control", name:"Saturation to 0"},
 		{category:"Color Control", name:"Desaturate Footage"},
 		{category:"Color Control", name:"Darken Footage"},
@@ -58,6 +61,7 @@ searchField.onActivate = function() {
 		{category:"Text Tools", name:"Text with Violator (Use Comp Name)"},
         {category:"Text Tools", name:"Stylish Text In"},
         {category:"Text Tools", name:"Unscatter"},
+        {category:"Text Tools", name:"Dark Souls Text"},
         {category:"Transitions", name:"Lens Distort Transition"},
         {category:"Transitions", name:"Lens Flare Transition"},
         {category:"Transitions", name:"Offset Transition"},
@@ -69,6 +73,8 @@ searchField.onActivate = function() {
         {category:"Effects", name:"Motion Blur Bloom"},
         {category:"Effects", name:"Offset (Horizontal)"},
         {category:"Effects", name:"Particle Star Burst"},
+        {category:"Effects", name:"Particle Sweep"},
+        {category:"Effects", name:"Rainbow Refraction"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
         {category:"Timeline Management", name:"Loop Maker"},
@@ -87,7 +93,7 @@ searchField.onActivate = function() {
 		{category:"Automation", name:"seeLayers"},
 		{category:"Automation", name:"runAutomation"},
 		{category:"Automation", name:"runJSXFile"},
-		{category:"Version", name:"Version 092226-0123"},
+		{category:"Version", name:"Version 092226-1644"},
 
 
     ];
@@ -153,6 +159,9 @@ searchField.onActivate = function() {
 			case "Stylish Text In":
 				applyTextAppear(comp, layer);
 			break;
+			case "Dark Souls Text":
+				DarkSoulsText();
+			break;
 			case "Lens Distort Transition":
 				lensTransition();
 			break;
@@ -188,6 +197,12 @@ searchField.onActivate = function() {
 		    break;
 			case "Particle Star Burst":
 			    ParticleStarBurst();
+		    break;
+			case "Particle Sweep":
+			    ParticleSweep();
+		    break;
+			case "Rainbow Refraction":
+			    RainbowRefraction();
 		    break;
 			case "Quick Light Sweep":
 			    quickLightSweep();
@@ -261,11 +276,14 @@ searchField.onActivate = function() {
 			case "Slide in from Top":
 				SlideInFromTop();
 			break;
+			case "Slide in from Random":
+				SlideInFromRandom();
+			break;
 			case "Card In":
 				CardIn();
 			break;
 			case "runJSXFile":
-				runJSXFile("C:\Users\JJJ\Desktop\oneOffScript.jsx");
+				runJSXFile("oneOffScript.jsx");
 			break;
 			case "Fade + Scale Down":
 				fadePlusScaleDown();
@@ -287,6 +305,12 @@ searchField.onActivate = function() {
 				break;
 			case "Grow Over Time":
 				growOverTime();
+				break;
+			case "Glow (Quick)":
+				QuickGlow();
+				break;
+			case "Glow (Intense)":
+				IntenseGlow();
 				break;
 			case "Desaturate Footage":
 				desaturateFootage();
@@ -3682,6 +3706,61 @@ function SlideInFromBottom() {
     }
 }
 
+function SlideInFromRandom() {
+    app.beginUndoGroup("Slide In From Random");
+
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+
+    var t = comp.time;
+    var compDiagonal = Math.sqrt(Math.pow(comp.width, 2) + Math.pow(comp.height, 2));
+
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
+
+            var pos = layer.property("Transform").property("Position");
+            if (!pos) { continue; }
+
+            var finalPos = pos.value;
+            var size = getScaledSize(layer); // FIXED: no longer needs comp
+
+            // Random angle per layer
+            var randomAngle = Math.random() * Math.PI * 2;
+
+            var maxLayerSize = Math.max(size[0], size[1]);
+            var offscreenDist = compDiagonal / 2 + maxLayerSize + 200;
+
+            var dirX = Math.cos(randomAngle);
+            var dirY = Math.sin(randomAngle);
+
+            var offX = finalPos[0] + dirX * offscreenDist;
+            var offY = finalPos[1] + dirY * offscreenDist;
+
+            pos.setValueAtTime(t, [offX, offY]);
+            pos.setValueAtTime(t + 0.5, finalPos);
+
+            var k1 = pos.nearestKeyIndex(t);
+            var k2 = pos.nearestKeyIndex(t + 0.5);
+
+            pos.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+            pos.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+
+            var easeOut = new KeyframeEase(0, 30);
+            var easeIn = new KeyframeEase(0, 100);
+
+            pos.setTemporalEaseAtKey(k1, [easeOut], [easeOut]);
+            pos.setTemporalEaseAtKey(k2, [easeIn], [easeIn]);
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
 function CardIn() {
     app.beginUndoGroup("Card In");
 
@@ -4588,7 +4667,7 @@ function SpinIn() {
 	
     // Position 3D
     var posProp = animProps.addProperty("ADBE Text Position 3D");
-    posProp.setValueAtTime(t, [0,0,2500]);
+    posProp.setValueAtTime(t, [0,50,1000]);
     posProp.setValueAtTime(t+dur, [0,0,0]);
     try {
         posProp.setTemporalEaseAtKey(1, [easeIn,easeIn,easeIn], [easeOut,easeOut,easeOut]);
@@ -4693,6 +4772,563 @@ function SpinIn() {
             blurProp.setValueAtTime(t+blurDur, 0);
         } catch(e2){ alert("Gaussian Blur effect failed: "+e2.message); }
     }
+
+    app.endUndoGroup();
+}
+
+/* Particle Sweep Effect*/
+
+function ParticleSweep(){
+    app.beginUndoGroup("ParticleSweep");
+
+    var sourceComp = app.project.activeItem;
+    if(!(sourceComp && sourceComp instanceof CompItem)){
+        alert("Select a comp/layer first");
+        return;
+    }
+    var selectedLayer = sourceComp.selectedLayers[0];
+    var currentTime = sourceComp.time; // <-- NEW: get CTI
+    var sourceCompWidth = sourceComp.width;
+    var sourceCompHeight = sourceComp.height;
+
+    var targetComp = null;
+    for(var i=1; i<=app.project.numItems; i++){
+        var item = app.project.item(i);
+        if(item instanceof CompItem && item.name === "Particle Sweep"){
+            targetComp = item;
+            break;
+        }
+    }
+    if(targetComp === null){
+        targetComp = app.project.items.addComp("Particle Sweep", 1920, 1080, 1, 5, 30);
+    }
+    targetComp.width = 1920;
+    targetComp.height = 1080;
+    targetComp.duration = 5;
+
+    var solid = null;
+    for(var l=1; l<=targetComp.numLayers; l++){
+        if(targetComp.layer(l).name === "Particle Sweep Solid"){
+            solid = targetComp.layer(l);
+            break;
+        }
+    }
+    if(solid === null){
+        solid = targetComp.layers.addSolid([0,0,0], "Particle Sweep Solid", targetComp.width, targetComp.height, 1, targetComp.duration);
+    }
+    solid.startTime = 0;
+    solid.outPoint = 5;
+
+    var fx = null;
+    try { fx = solid.property("ADBE Effect Parade").property("CC Particle Systems II"); } catch(e){}
+    if(fx == null){
+        fx = solid.property("ADBE Effect Parade").addProperty("CC Particle Systems II");
+    }
+
+    function setByMatchName(effect, matchName, value){
+        function search(group){
+            for(var k=1; k<=group.numProperties; k++){
+                var p = group.property(k);
+                if(p == null) continue;
+                if(p.matchName === matchName){
+                    try { p.setValue(value); } catch(e){}
+                    return true;
+                }
+                if(p.numProperties > 0){
+                    if(search(p)) return true;
+                }
+            }
+            return false;
+        }
+        search(effect);
+    }
+
+    setByMatchName(fx, "CC Particle Systems II-0001", 4.00000000000001);
+    setByMatchName(fx, "CC Particle Systems II-0002", 0.90459363957597);
+    setByMatchName(fx, "CC Particle Systems II-0005", 3);
+    setByMatchName(fx, "CC Particle Systems II-0006", 82);
+    setByMatchName(fx, "CC Particle Systems II-0009", 9);
+    setByMatchName(fx, "CC Particle Systems II-0010", 0.5);
+    setByMatchName(fx, "CC Particle Systems II-0011", 0);
+    setByMatchName(fx, "CC Particle Systems II-0012", 0);
+    setByMatchName(fx, "CC Particle Systems II-0013", 0);
+    setByMatchName(fx, "CC Particle Systems II-0014", -90);
+    setByMatchName(fx, "CC Particle Systems II-0015", 0);
+    setByMatchName(fx, "CC Particle Systems II-0018", 2);
+    setByMatchName(fx, "CC Particle Systems II-0019", 0.09);
+    setByMatchName(fx, "CC Particle Systems II-0020", 0);
+    setByMatchName(fx, "CC Particle Systems II-0021", 0.5);
+    setByMatchName(fx, "CC Particle Systems II-0022", 3);
+    setByMatchName(fx, "CC Particle Systems II-0023", 0.75);
+    setByMatchName(fx, "CC Particle Systems II-0029", 0);
+    setByMatchName(fx, "CC Particle Systems II-0024", 1);
+    setByMatchName(fx, "CC Particle Systems II-0025", [0.9450980424881,0.86417061090469,0.70789694786072,1]);
+    setByMatchName(fx, "CC Particle Systems II-0026", [0.52549022436142,0.48752400279045,0.41420993208885,1]);
+    setByMatchName(fx, "CC Particle Systems II-0028", 1);
+    setByMatchName(fx, "CC Particle Systems II-0030", 0);
+    setByMatchName(fx, "ADBE Force CPU GPU", 1);
+
+    var posProp = null;
+    (function findPos(group){
+        for(var k=1; k<=group.numProperties; k++){
+            var p = group.property(k);
+            if(p == null) continue;
+            if(p.matchName === "CC Particle Systems II-0004"){ posProp = p; return; }
+            if(p.numProperties > 0) findPos(p);
+        }
+    })(fx);
+
+    if(posProp){
+        var startPos = [-100, 540];
+        var endPos = [2500, 540];
+        posProp.setValueAtTime(0, startPos);
+        posProp.setValueAtTime(5, endPos);
+        try{
+            var inFast = new KeyframeEase(0, 5);
+            var outFast = new KeyframeEase(0, 5);
+            var inSlow = new KeyframeEase(0, 85);
+            var outSlow = new KeyframeEase(0, 85);
+            posProp.setInterpolationTypeAtKey(1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            posProp.setInterpolationTypeAtKey(2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            posProp.setTemporalEaseAtKey(1, [inFast], [outFast]);
+            posProp.setTemporalEaseAtKey(2, [inSlow], [outSlow]);
+        }catch(e){}
+    }
+
+    solid.outPoint = 5;
+
+    if(sourceComp!== targetComp){
+        sourceComp.openInViewer();
+
+        var compLayer = sourceComp.layers.add(targetComp);
+        compLayer.name = "Particle Sweep";
+
+        if(selectedLayer){
+            compLayer.moveBefore(selectedLayer);
+        }
+
+        // TWEAK: Start at current time (CTI)
+        compLayer.startTime = currentTime;
+        compLayer.outPoint = currentTime + 5;
+
+        var scaleFactor = (sourceCompWidth / targetComp.width) * 100;
+        var scaleProp = compLayer.property("ADBE Transform Group").property("ADBE Scale");
+        scaleProp.setValue([scaleFactor, scaleFactor]);
+
+        var pos = compLayer.property("ADBE Transform Group").property("ADBE Position");
+        pos.setValue([sourceCompWidth/2, sourceCompHeight/2]);
+    }
+
+    app.endUndoGroup();
+}
+
+/* DarkSoulsText.jsx - One-click function DarkSoulsText() - FINAL */
+function DarkSoulsText() {
+    app.beginUndoGroup("DarkSoulsText");
+
+    function getRandomLetters(n) {
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var res = "";
+        for (var i=0;i<n;i++) res+=chars.charAt(Math.floor(Math.random()*chars.length));
+        return res;
+    }
+    function getUniqueCompName(baseName) {
+        var exists=false;
+        for(var i=1;i<=app.project.numItems;i++){ if(app.project.item(i) instanceof CompItem && app.project.item(i).name===baseName){ exists=true; break; } }
+        if(!exists) return baseName;
+        var newName;
+        do{
+            newName=baseName+getRandomLetters(3);
+            exists=false;
+            for(var j=1;j<=app.project.numItems;j++){ if(app.project.item(j) instanceof CompItem && app.project.item(j).name===newName){ exists=true; break; } }
+        }while(exists);
+        return newName;
+    }
+
+    var originalComp=null, selectedLayer=null, currentTime=0;
+    if(app.project.activeItem instanceof CompItem){
+        originalComp=app.project.activeItem;
+        currentTime=originalComp.time;
+        if(originalComp.selectedLayers.length>0) selectedLayer=originalComp.selectedLayers[0];
+    }
+
+    var compName=getUniqueCompName("DarkSoulsText");
+    var compDuration=4;
+    var compFps=originalComp?originalComp.frameRate:24;
+    var frameDur=1/compFps;
+    var newComp=app.project.items.addComp(compName,1920,1080,1,compDuration,compFps);
+    newComp.bgColor=[0,0,0];
+
+    var banner=newComp.layers.addSolid([0,0,0],"BG_Banner",1920,350,1,compDuration);
+    banner.property("ADBE Transform Group").property("ADBE Position").setValue([960,540]);
+    var bBlur=banner.Effects.addProperty("ADBE Box Blur");
+    bBlur.property("ADBE Box Blur-0001").setValue(70);
+    bBlur.property("ADBE Box Blur-0002").setValue(2);
+    var bScale=banner.property("ADBE Transform Group").property("ADBE Scale");
+    bScale.setValue([0.1,100]);
+    bScale.setValueAtTime(0,[0.1,100]);
+    bScale.setValueAtTime(0.3,[100,100]);
+    bScale.setValueAtTime(3.5,[100,100]);
+    var bOp=banner.property("ADBE Transform Group").property("ADBE Opacity");
+    bOp.setValueAtTime(0,0);
+    bOp.setValueAtTime(0.4,45);
+    bOp.setValueAtTime(2.8,45);
+    bOp.setValueAtTime(3.6,0);
+
+    // >>> CHANGE COLOR HERE <<<
+    var TEXT_COLOR = [0.78431372549, 0.6, 0.20392156862]; // C89934
+
+    function makeTextDoc(doc){
+        try{ doc.font="TrajanPro-Bold"; }catch(e){ try{ doc.font="TrajanPro-Regular"; }catch(e2){ try{ doc.font="Arial-BoldMT"; }catch(e3){} } }
+        doc.fontSize=92;
+        doc.tracking=-20;
+        doc.justification=ParagraphJustification.CENTER_JUSTIFY;
+        try{ doc.applyFill = true; }catch(e){}
+        try{ doc.fillColor = TEXT_COLOR; }catch(e){}
+        return doc;
+    }
+
+    var lightLayer=newComp.layers.addText("VICTORY ACHIEVED");
+    lightLayer.name="Light Burst";
+    var lp=lightLayer.property("ADBE Text Properties").property("ADBE Text Document");
+    var ld=lp.value;
+    ld=makeTextDoc(ld);
+    lp.setValue(ld);
+    // Force re-apply color after setValue - AE sometimes drops it on first set
+    try{
+        var ld2 = lightLayer.property("ADBE Text Properties").property("ADBE Text Document").value;
+        ld2.fillColor = TEXT_COLOR;
+        ld2.applyFill = true;
+        lightLayer.property("ADBE Text Properties").property("ADBE Text Document").setValue(ld2);
+    }catch(e){}
+
+    lightLayer.property("ADBE Transform Group").property("ADBE Position").setValue([960,555]);
+    var tScale=lightLayer.property("ADBE Transform Group").property("ADBE Scale");
+    tScale.setValueAtTime(0.1,[112,112]);
+    tScale.setValueAtTime(0.7,[100,100]);
+    tScale.setValueAtTime(2.8,[100.5,100.5]);
+    var easeOut=new KeyframeEase(0,85), easeIn=new KeyframeEase(0.1,0.1);
+    try{
+        tScale.setTemporalEaseAtKey(1,[easeOut,easeOut],[easeIn,easeIn]);
+        tScale.setTemporalEaseAtKey(2,[easeOut,easeOut],[easeIn,easeIn]);
+    }catch(e){}
+
+    var tOp=lightLayer.property("ADBE Transform Group").property("ADBE Opacity");
+    tOp.setValueAtTime(0.1,0);
+    tOp.setValueAtTime(0.45,100);
+    tOp.setValueAtTime(2.8,100);
+    tOp.setValueAtTime(3.6,0);
+
+    var burst=lightLayer.Effects.addProperty("CC Light Burst 2.5");
+    burst.name="CC Light Burst 2.5";
+    try{
+        burst.property(1).setValue([960,540]);
+        burst.property(2).setValue(200);
+        var rayProp=burst.property(3);
+        rayProp.setValueAtTime(0.5, 0);
+        rayProp.setValueAtTime(0.5 + frameDur, 30);
+        rayProp.setValueAtTime(2.0, 0);
+    }catch(e){}
+
+    var sweep=lightLayer.Effects.addProperty("CC Light Sweep");
+    sweep.name="CC Light Sweep";
+    try{
+        sweep.property("CC Light Sweep-0001").setValue([961,525]);
+        sweep.property("CC Light Sweep-0002").setValue(-90);
+        sweep.property("CC Light Sweep-0003").setValue(2);
+        sweep.property("CC Light Sweep-0004").setValue(11);
+        sweep.property("CC Light Sweep-0005").setValue(34);
+        sweep.property("CC Light Sweep-0006").setValue(0);
+        sweep.property("CC Light Sweep-0007").setValue(0);
+        sweep.property("CC Light Sweep-0008").setValue([1,1,1]);
+        sweep.property("CC Light Sweep-0009").setValue(5);
+    }catch(e){}
+
+    var baseLayer=newComp.layers.addText("VICTORY ACHIEVED");
+    baseLayer.name="Base";
+    var bp=baseLayer.property("ADBE Text Properties").property("ADBE Text Document");
+    var bd=bp.value;
+    bd=makeTextDoc(bd);
+    bp.setValue(bd);
+    try{
+        var bd2 = baseLayer.property("ADBE Text Properties").property("ADBE Text Document").value;
+        bd2.fillColor = TEXT_COLOR;
+        bd2.applyFill = true;
+        baseLayer.property("ADBE Text Properties").property("ADBE Text Document").setValue(bd2);
+    }catch(e){}
+    baseLayer.property("ADBE Transform Group").property("ADBE Position").setValue([960,555]);
+    baseLayer.parent=lightLayer;
+    try{ baseLayer.property("ADBE Transform Group").property("ADBE Scale").setValue([100,100]); }catch(e){}
+    try{ baseLayer.property("ADBE Text Properties").property("ADBE Text Document").expression='thisComp.layer("Light Burst").text.sourceText'; }catch(e){}
+    try{ baseLayer.property("ADBE Transform Group").property("ADBE Opacity").expression='thisComp.layer("Light Burst").transform.opacity'; }catch(e){}
+    baseLayer.moveAfter(lightLayer);
+
+    if(originalComp){
+        var compLayer=originalComp.layers.add(newComp);
+        compLayer.name=compName;
+        compLayer.startTime=currentTime;
+        if(selectedLayer) compLayer.moveBefore(selectedLayer);
+        else compLayer.moveToBeginning();
+    }
+    app.endUndoGroup();
+}
+
+/*
+    Quick Glow
+*/
+
+function QuickGlow() {
+    var comp = app.project.activeItem;
+
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Please select a composition and at least one layer.");
+        return;
+    }
+
+    var selectedLayers = comp.selectedLayers;
+    if (selectedLayers.length === 0) {
+        alert("Please select at least one layer.");
+        return;
+    }
+
+    app.beginUndoGroup("QuickGlow");
+
+    // Current time as start of ramp
+    var t0 = comp.time;
+    var t1 = t0 + 1.0; // 1 second later
+
+    for (var i = 0; i < selectedLayers.length; i++) {
+        var layer = selectedLayers[i];
+        var fxParade = layer.property("ADBE Effect Parade");
+
+        // --- Effect 2 (We create bottom first, so final order is correct) ---
+        // The spec says: Outer Halo should be on the BOTTOM of Inner Halo
+        // If we add effects, newest is added at top of stack visually? Actually addProperty adds to bottom of effect stack UI.
+        // So to guarantee order: Create Inner first, then Outer -> Outer will be below Inner.
+        // We'll do Inner then Outer.
+
+        // --- Effect 1: Glow Inner Halo (TOP) ---
+        var innerGlow = fxParade.addProperty("ADBE Glo2");
+        innerGlow.name = "Glow Inner Halo";
+
+        // Settings - ONLY set what you specified
+        // [2] Glow Threshold - ADBE Glo2-0002 - 0-255 range
+        innerGlow.property("ADBE Glo2-0002").setValue(127); // 50% of 255
+        // [5] Composite Original - ADBE Glo2-0005 : 1 = On Top
+        try {
+            innerGlow.property("ADBE Glo2-0005").setValue(1); // On Top
+        } catch(e) {}
+
+        // [3] Glow Radius - ADBE Glo2-0003 - Keyframe 0 -> 50 over 1s
+        var innerRadius = innerGlow.property("ADBE Glo2-0003");
+        innerRadius.setValueAtTime(t0, 0);
+        innerRadius.setValueAtTime(t1, 50);
+
+        // [4] Glow Intensity - ADBE Glo2-0004 - Keyframe 0 -> 3 over 1s
+        var innerIntensity = innerGlow.property("ADBE Glo2-0004");
+        innerIntensity.setValueAtTime(t0, 0);
+        innerIntensity.setValueAtTime(t1, 3);
+    }
+
+    app.endUndoGroup();
+}
+
+/*
+    IntenseGlow - 1-Click Double Glow
+    Applies two ADBE Glo2 effects with keyframed intensity (0 -> target in 1 sec)
+
+    Installation:
+    - AE: File > Scripts > Run Script File > IntenseGlow.jsx
+    - Or place in: (AE Folder)/Scripts/ScriptUI Panels/
+
+    Usage: Select one or more layers, run the script.
+*/
+
+function IntenseGlow() {
+    var comp = app.project.activeItem;
+
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Please select a composition and at least one layer.");
+        return;
+    }
+
+    var selectedLayers = comp.selectedLayers;
+    if (selectedLayers.length === 0) {
+        alert("Please select at least one layer.");
+        return;
+    }
+
+    app.beginUndoGroup("IntenseGlow");
+
+    // Current time as start of ramp
+    var t0 = comp.time;
+    var t1 = t0 + 1.0; // 1 second later
+
+    for (var i = 0; i < selectedLayers.length; i++) {
+        var layer = selectedLayers[i];
+        var fxParade = layer.property("ADBE Effect Parade");
+
+        // --- Effect 2 (We create bottom first, so final order is correct) ---
+        // The spec says: Outer Halo should be on the BOTTOM of Inner Halo
+        // If we add effects, newest is added at top of stack visually? Actually addProperty adds to bottom of effect stack UI.
+        // So to guarantee order: Create Inner first, then Outer -> Outer will be below Inner.
+        // We'll do Inner then Outer.
+
+        // --- Effect 1: Glow Inner Halo (TOP) ---
+        var innerGlow = fxParade.addProperty("ADBE Glo2");
+        innerGlow.name = "Glow Inner Halo";
+
+        // Settings - ONLY set what you specified
+        // [2] Glow Threshold - ADBE Glo2-0002 - 0-255 range
+        innerGlow.property("ADBE Glo2-0002").setValue(127); // 50% of 255
+        // [5] Composite Original - ADBE Glo2-0005 : 1 = On Top
+        try {
+            innerGlow.property("ADBE Glo2-0005").setValue(1); // On Top
+        } catch(e) {}
+
+        // [3] Glow Radius - ADBE Glo2-0003 - Keyframe 0 -> 50 over 1s
+        var innerRadius = innerGlow.property("ADBE Glo2-0003");
+        innerRadius.setValueAtTime(t0, 0);
+        innerRadius.setValueAtTime(t1, 50);
+
+        // [4] Glow Intensity - ADBE Glo2-0004 - Keyframe 0 -> 3 over 1s
+        var innerIntensity = innerGlow.property("ADBE Glo2-0004");
+        innerIntensity.setValueAtTime(t0, 0);
+        innerIntensity.setValueAtTime(t1, 3);
+
+        // --- Effect 2: Glow Outer Halo (BOTTOM) ---
+        var outerGlow = fxParade.addProperty("ADBE Glo2");
+        outerGlow.name = "Glow Outer Halo";
+
+        outerGlow.property("ADBE Glo2-0002").setValue(255); // 100% = 255
+
+        try {
+            outerGlow.property("ADBE Glo2-0005").setValue(1); // On Top
+        } catch(e) {}
+
+        // Radius 0 -> 100
+        var outerRadius = outerGlow.property("ADBE Glo2-0003");
+        outerRadius.setValueAtTime(t0, 0);
+        outerRadius.setValueAtTime(t1, 100);
+
+        // Intensity 0 -> 2
+        var outerIntensity = outerGlow.property("ADBE Glo2-0004");
+        outerIntensity.setValueAtTime(t0, 0);
+        outerIntensity.setValueAtTime(t1, 2);
+    }
+
+    app.endUndoGroup();
+}
+
+/* RainbowRefraction - MASTER FUNCTION vFinal
+   One-click build + adds to selected layer at CTI
+*/
+
+/*RAINBOW REFRACTION*/
+function createLightStreak(comp, opts) {
+    opts = opts || {};
+    var width  = opts.width  || 1800;
+    var height = opts.height || 28;
+    var pos    = opts.position || [comp.width / 2, comp.height / 2];
+    var name   = opts.name || "Light Streak";
+    var layer = comp.layers.addShape();
+    layer.name = name;
+    var group = layer.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+    var gc = group.property("ADBE Vectors Group");
+    var ellipse = gc.addProperty("ADBE Vector Shape - Ellipse");
+    ellipse.property("ADBE Vector Ellipse Size").setValue([width, height]);
+    var fill = gc.addProperty("ADBE Vector Graphic - Fill");
+    fill.property("ADBE Vector Fill Color").setValue([1, 1, 1]);
+    layer.property("ADBE Transform Group").property("ADBE Position").setValue(pos);
+    var ramp = layer.property("ADBE Effect Parade").addProperty("ADBE Ramp");
+    ramp.property("ADBE Ramp-0001").setValue([pos[0] - width / 2, pos[1]]);
+    ramp.property("ADBE Ramp-0003").setValue([pos[0] + width / 2, pos[1]]);
+    ramp.property("ADBE Ramp-0005").setValue(1);
+    layer.property("ADBE Effect Parade").addProperty("APC Colorama");
+    var blur = layer.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur 2");
+    blur.property("ADBE Gaussian Blur 2-0001").setValue(30);
+    return layer;
+}
+
+function RainbowRefraction() {
+    app.beginUndoGroup("RainbowRefraction");
+
+    var originalComp = null;
+    var originalSelLayer = null;
+    var currentTime = 0;
+
+    if(app.project && app.project.activeItem && app.project.activeItem instanceof CompItem){
+        originalComp = app.project.activeItem;
+        currentTime = originalComp.time;
+        if(originalComp.selectedLayers && originalComp.selectedLayers.length>0){
+            originalSelLayer = originalComp.selectedLayers[0];
+        }
+    }
+
+    function findComp(name){
+        for(var i=1;i<=app.project.numItems;i++){
+            var it=app.project.item(i);
+            if(it instanceof CompItem && it.name==name) return it;
+        }
+        return null;
+    }
+
+    var soloComp = findComp("SoloStreak");
+    if(soloComp){ soloComp.duration=60; soloComp.width=2500; soloComp.height=200; while(soloComp.numLayers>0) soloComp.layer(1).remove(); }
+    else { soloComp = app.project.items.addComp("SoloStreak", 2500, 200, 1, 60, 24); }
+    soloComp.bgColor=[0,0,0]; soloComp.bitsPerChannel=16;
+    createLightStreak(soloComp,{width:1800,height:28,position:[1250,100],name:"Light Streak"});
+
+    var singleComp = findComp("SingleLightStreak");
+    if(singleComp){ singleComp.duration=60; singleComp.width=2500; singleComp.height=200; while(singleComp.numLayers>0) singleComp.layer(1).remove(); }
+    else { singleComp = app.project.items.addComp("SingleLightStreak", 2500, 200, 1, 60, 24); }
+    singleComp.bgColor=[0,0,0]; singleComp.bitsPerChannel=16;
+    var soloLayer = singleComp.layers.add(soloComp);
+    soloLayer.name="SoloStreak";
+    var posProp = soloLayer.property("Position");
+    var opProp = soloLayer.property("Opacity");
+    posProp.setValueAtTime(0, [910, 100]); posProp.setValueAtTime(2, [1705, 100]); posProp.setValueAtTime(3, [1705, 100]);
+    opProp.setValueAtTime(0, 0); opProp.setValueAtTime(0.15, 100); opProp.setValueAtTime(1.85, 100); opProp.setValueAtTime(2, 0); opProp.setValueAtTime(3, 0);
+    posProp.expression = 'loopOut("cycle")'; opProp.expression = 'loopOut("cycle")';
+
+    var radialComp = findComp("RadialRainbow");
+    if(radialComp){ radialComp.duration=60; radialComp.width=1920; radialComp.height=1080; while(radialComp.numLayers>0) radialComp.layer(1).remove(); }
+    else { radialComp = app.project.items.addComp("RadialRainbow", 1920, 1080, 1, 60, 24); }
+    radialComp.bgColor=[0,0,0]; radialComp.bitsPerChannel=16;
+    var center = radialComp.layers.addNull(); center.name="CENTER"; center.property("Position").setValue([960,540]);
+    var seed=7; function rand(a,b){ seed=(seed*9301+49297)%233280; return a+(seed/233280)*(b-a); }
+    for(var n=0;n<12;n++){
+        var streakNum=n+1; var lyr=radialComp.layers.add(singleComp); lyr.name="Streak_"+streakNum;
+        var len=rand(7,21.25); var thick=rand(45,80);
+        if(streakNum==2||streakNum==8){ len*=0.75; thick*=0.75; }
+        if(streakNum==2||streakNum==3){ thick*=2; }
+        lyr.property("Scale").setValue([len, thick, 100]);
+        var baseAng=(360/12)*n; var ang=baseAng+rand(-22,22);
+        if(streakNum==9) ang-=12; if(streakNum==10) ang+=12; if(streakNum==5) ang-=10; if(streakNum==6) ang+=14;
+        lyr.property("Rotation").setValue(ang);
+        var dist=rand(350,650); if(streakNum==9) dist-=80; if(streakNum==10) dist+=80; if(streakNum==5) dist-=60; if(streakNum==6) dist+=60;
+        lyr.property("Position").setValue([960+Math.cos(ang*Math.PI/180)*dist, 540+Math.sin(ang*Math.PI/180)*dist]);
+        lyr.startTime=rand(0,4); try{ lyr.blendingMode=BlendingMode.ADD; }catch(e){} lyr.property("Opacity").setValue(rand(70,100));
+    }
+
+    if(originalComp && originalComp != radialComp && originalComp != soloComp && originalComp != singleComp){
+        try {
+            var added = originalComp.layers.add(radialComp);
+            added.name = "RadialRainbow";
+            try { added.collapseTransformation = true; } catch(e){}
+            try { added.blendingMode = BlendingMode.ADD; } catch(e2){}
+            added.startTime = currentTime;
+            if(originalSelLayer){
+                try {
+                    var stillExists = false;
+                    for(var i=1;i<=originalComp.numLayers;i++){ if(originalComp.layer(i) === originalSelLayer) { stillExists=true; break; } }
+                    if(stillExists){ added.moveBefore(originalSelLayer); }
+                } catch(eMove){}
+            }
+        } catch(eAdd){}
+    }
+
+    if(!originalComp){ radialComp.openInViewer(); }
 
     app.endUndoGroup();
 }
