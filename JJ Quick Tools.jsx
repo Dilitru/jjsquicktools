@@ -62,6 +62,7 @@ searchField.onActivate = function() {
         {category:"Text Tools", name:"Stylish Text In"},
         {category:"Text Tools", name:"Unscatter"},
         {category:"Text Tools", name:"Dark Souls Text"},
+        {category:"Text Tools", name:"Tracking In"},
         {category:"Transitions", name:"Lens Distort Transition"},
         {category:"Transitions", name:"Lens Flare Transition"},
         {category:"Transitions", name:"Offset Transition"},
@@ -75,6 +76,7 @@ searchField.onActivate = function() {
         {category:"Effects", name:"Particle Star Burst"},
         {category:"Effects", name:"Particle Sweep"},
         {category:"Effects", name:"Rainbow Refraction"},
+        {category:"Effects", name:"Chromatic Abberation"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
         {category:"Timeline Management", name:"Loop Maker"},
@@ -162,6 +164,9 @@ searchField.onActivate = function() {
 			case "Dark Souls Text":
 				DarkSoulsText();
 			break;
+			case "Tracking In":
+				TextTrackingIn();
+			break;
 			case "Lens Distort Transition":
 				lensTransition();
 			break;
@@ -203,6 +208,9 @@ searchField.onActivate = function() {
 		    break;
 			case "Rainbow Refraction":
 			    RainbowRefraction();
+		    break;
+			case "Chromatic Abberation":
+			    ChromaticAbberation();
 		    break;
 			case "Quick Light Sweep":
 			    quickLightSweep();
@@ -361,6 +369,40 @@ function applyTextAppear(comp, layer) {
     scale.setTemporalEaseAtKey(s2, [easeIn,easeIn,easeIn], [easeIn,easeIn,easeIn]);
 
     app.endUndoGroup();
+}
+
+function TextTrackingIn(textLayer) {
+	app.beginUndoGroup("Text Tracking In");
+    textLayer = textLayer || app.project.activeItem.selectedLayers[0];
+    var comp = textLayer.containingComp;
+    var t0 = comp.time; // animation starts at current playhead position
+
+    // 1. Opacity fade in, 0.5s
+    var opacity = textLayer.property("ADBE Transform Group").property("ADBE Opacity");
+    opacity.setValueAtTime(t0, 0);
+    opacity.setValueAtTime(t0 + 0.5, 100);
+
+    // 2. Text Animator — Tracking Amount, additive, 100 -> 0 over 1s
+    var animators = textLayer.property("ADBE Text Properties").property("ADBE Text Animators");
+    var animator = animators.addProperty("ADBE Text Animator");
+    animator.name = "Tracking In";
+
+    var trackingProp = animator.property("ADBE Text Animator Properties")
+                                .addProperty("ADBE Text Tracking Amount");
+    trackingProp.setValueAtTime(t0, 100);
+    trackingProp.setValueAtTime(t0 + 1, 0);
+	
+	var trackingProp = animator.property("ADBE Text Animator Properties")
+                                .addProperty("ADBE Text Tracking Amount");
+    trackingProp.setValueAtTime(t0, 100);
+    trackingProp.setValueAtTime(t0 + 1, 0);
+
+    var ease = new KeyframeEase(0, 33); // speed 0, influence 33% — standard Easy Ease
+    trackingProp.setTemporalEaseAtKey(1, [ease], [ease]);
+    trackingProp.setTemporalEaseAtKey(2, [ease], [ease]);
+
+    return textLayer;
+	app.endUndoGroup();
 }
 
 function applyColorBalanceSaturation(comp, layer) {
@@ -5333,7 +5375,127 @@ function RainbowRefraction() {
     app.endUndoGroup();
 }
 
+/*
+Chromatic Abberation
+*/
+function ChromaticAbberation() {
+    app.beginUndoGroup("Fake CA - Fixed Placement");
 
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Select a comp and a layer.");
+        app.endUndoGroup();
+        return;
+    }
+    if (comp.selectedLayers.length === 0) {
+        alert("Select a layer first.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var origLayer = comp.selectedLayers[0];
+    var origName = origLayer.name;
+    var origIndex = origLayer.index;
+    var offset = 8;
+
+    // STEP 1: Original -> SOURCE (keeps origIndex)
+    var sourceCompName = "CA_SOURCE - " + origName;
+    comp.layers.precompose([origIndex], sourceCompName, true);
+
+    // Get fresh ref - it's at origIndex
+    var baseLayer = comp.layer(origIndex);
+    baseLayer.name = sourceCompName + " - BASE";
+
+    // STEP 2: Duplicate at same spot (duplicate places above)
+    // After first duplicate: new layer at origIndex, base pushes to origIndex+1
+    var blueLayer = baseLayer.duplicate();
+    blueLayer.name = sourceCompName + " - BLUE";
+    
+    var redLayer = baseLayer.duplicate();
+    redLayer.name = sourceCompName + " - RED";
+
+    // Now we have 3 contiguous layers at origIndex area:
+    // Index: origIndex = RED (top), origIndex+1 = BLUE (middle), origIndex+2 = BASE (bottom)
+    // This is perfect: BASE bottommost as requested
+
+    // STEP 3: Apply effects
+
+    // BASE - no changes, bottommost
+    try { baseLayer.blendingMode = BlendingMode.NORMAL; } catch(e) {}
+    baseLayer.property("ADBE Transform Group").property("ADBE Opacity").setValue(100);
+
+    // BLUE - 50% Lighten, upper right, Shift 1,1,10,4
+    var shB = blueLayer.property("ADBE Effect Parade").addProperty("ADBE Shift Channels");
+    shB.name = "Shift - Blue";
+    try {
+        shB.property("ADBE Shift Channels-0001").setValue(1);  // Red = Off
+        shB.property("ADBE Shift Channels-0002").setValue(10);  // Green = Off
+        shB.property("ADBE Shift Channels-0003").setValue(10); // Blue = Blue (your value)
+        shB.property("ADBE Shift Channels-0004").setValue(4);  // Alpha = Alpha (your value)
+    } catch(e) {}
+    try { blueLayer.blendingMode = BlendingMode.LIGHTEN; } catch(e) {
+        try { blueLayer.property("ADBE Transform Group").property("ADBE Blend Mode").setValue(17); } catch(e2) {}
+    }
+    var posB = blueLayer.property("ADBE Transform Group").property("ADBE Position").value;
+    posB[0] = posB[0] + offset;
+    posB[1] = posB[1] - offset;
+    blueLayer.property("ADBE Transform Group").property("ADBE Position").setValue(posB);
+    blueLayer.property("ADBE Transform Group").property("ADBE Opacity").setValue(50);
+
+    // RED - 50% Lighten, lower left, Shift 10,1,1,4 (mirrored from your blue spec)
+    var shR = redLayer.property("ADBE Effect Parade").addProperty("ADBE Shift Channels");
+    shR.name = "Shift - Red";
+    try {
+        shR.property("ADBE Shift Channels-0001").setValue(1); // Red = Red
+        shR.property("ADBE Shift Channels-0002").setValue(2);  // Green = Off
+        shR.property("ADBE Shift Channels-0003").setValue(10);  // Blue = Off
+        shR.property("ADBE Shift Channels-0004").setValue(10);  // Alpha = Alpha
+    } catch(e) {}
+    try { redLayer.blendingMode = BlendingMode.LIGHTEN; } catch(e) {
+        try { redLayer.property("ADBE Transform Group").property("ADBE Blend Mode").setValue(17); } catch(e2) {}
+    }
+    var posR = redLayer.property("ADBE Transform Group").property("ADBE Position").value;
+    posR[0] = posR[0] - offset;
+    posR[1] = posR[1] + offset;
+    redLayer.property("ADBE Transform Group").property("ADBE Position").setValue(posR);
+    redLayer.property("ADBE Transform Group").property("ADBE Opacity").setValue(50);
+
+    // STEP 4: Precompose R/G/B into FINAL
+    // Indices are contiguous at origIndex
+    var indices = [redLayer.index, blueLayer.index, baseLayer.index];
+    indices.sort(function(a,b){return a-b;});
+
+    comp.layers.precompose(indices, "CA_FINAL - " + origName, true);
+    var finalLayer = comp.selectedLayers[0];
+    finalLayer.name = "CA_FINAL - " + origName;
+
+    // FORCE placement back to original index (AE often puts new precomp at top)
+    // Move it to origIndex
+    try {
+        if (finalLayer.index !== origIndex) {
+            // If final is above origIndex, we need to move it down
+            // Move after the layer that is currently at origIndex-1, repeatedly
+            while (finalLayer.index < origIndex && finalLayer.index < comp.numLayers) {
+                var nextLayer = comp.layer(finalLayer.index + 1);
+                if (nextLayer) finalLayer.moveAfter(nextLayer);
+                else break;
+            }
+            while (finalLayer.index > origIndex) {
+                var prevLayer = comp.layer(finalLayer.index - 1);
+                if (prevLayer) finalLayer.moveBefore(prevLayer);
+                else break;
+            }
+        }
+    } catch(e) {
+        // Fallback: just try moveBefore layer at origIndex
+        try {
+            var target = comp.layer(origIndex);
+            if (target && target !== finalLayer) finalLayer.moveBefore(target);
+        } catch(e2) {}
+    }
+
+    app.endUndoGroup();
+}
 
 // Keep this on the bottom!
 var myUI = JJQuickTools(this);
