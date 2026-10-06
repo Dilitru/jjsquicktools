@@ -72,13 +72,14 @@ searchField.onActivate = function() {
         {category:"Effects", name:"Lens Flare Horizontal"},
         {category:"Effects", name:"Radial Flare"},
         {category:"Effects", name:"Motion Blur Bloom"},
-        {category:"Effects", name:"Offset (Horizontal)"},
         {category:"Effects", name:"Particle Star Burst"},
         {category:"Effects", name:"Particle Sweep"},
         {category:"Effects", name:"Rainbow Refraction"},
         {category:"Effects", name:"Chromatic Abberation"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
+        {category:"Layer Management", name:"Offset Loop Vertical"},
+        {category:"Layer Management", name:"Offset Loop Horizontal"},
         {category:"Timeline Management", name:"Loop Maker"},
         {category:"Audio Management", name:"BGM Compressor"},
         {category:"Collage Maker", name:"Sphere Collage (20)"},
@@ -220,6 +221,12 @@ searchField.onActivate = function() {
 			break;
 			case "Create Master Null":
 				createMasterNull();
+			break;
+			case "Offset Loop Vertical":
+				OffsetLoopVertical();
+			break;
+			case "Offset Loop Horizontal":
+				OffsetLoopHorizontal();
 			break;
 			case "Loop Maker":
 				loopMaker();
@@ -5493,6 +5500,141 @@ function ChromaticAbberation() {
             if (target && target !== finalLayer) finalLayer.moveBefore(target);
         } catch(e2) {}
     }
+
+    app.endUndoGroup();
+}
+
+function OffsetLoopVertical() {
+    app.beginUndoGroup("OffsetLoopVertical - 3s + loopOut");
+
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Select a composition and a layer.");
+        return;
+    }
+    var layer = comp.selectedLayers[0];
+    if (!layer) {
+        alert("Select one layer.");
+        return;
+    }
+
+    var effects = layer.property("ADBE Effect Parade");
+    // Clean old Offset
+    for (var i = 1; i <= effects.numProperties; i++) {
+        if (effects.property(i).matchName === "ADBE Offset") {
+            effects.property(i).remove();
+            break;
+        }
+    }
+    var offsetEffect = effects.addProperty("ADBE Offset");
+    var shiftCenter = offsetEffect.property("ADBE Offset-0001");
+
+    var layerWidth = layer.width;
+    var layerHeight = layer.height;
+
+    if (layerWidth < 1) {
+        try { layerWidth = layer.sourceRectAtTime(comp.time, false).width; } catch(e) {}
+        if (layerWidth < 1) layerWidth = comp.width;
+    }
+    if (layerHeight < 1) {
+        try { layerHeight = layer.sourceRectAtTime(comp.time, false).height; } catch(e) {}
+        if (layerHeight < 1) layerHeight = comp.height;
+    }
+
+    // Clear expression first
+    shiftCenter.expression = "";
+    
+    var startTime = layer.inPoint;
+    var loopDuration = 3;
+    var endTime = startTime + loopDuration;
+
+    if (layer.outPoint < endTime + 0.1) {
+        layer.outPoint = comp.duration;
+    }
+
+    var xCenter = layerWidth / 2;
+
+    // 1 PERFECT VERTICAL LOOP with keyframes
+    shiftCenter.setValueAtTime(startTime, [xCenter, 0]);
+    shiftCenter.setValueAtTime(endTime, [xCenter, layerHeight]);
+
+    try {
+        var k1 = shiftCenter.nearestKeyIndex(startTime);
+        var k2 = shiftCenter.nearestKeyIndex(endTime);
+        shiftCenter.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+        shiftCenter.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+    } catch(e) {}
+
+    shiftCenter.expression = "loopOut();";
+
+    app.endUndoGroup();
+}
+
+function OffsetLoopHorizontal() {
+    app.beginUndoGroup("OffsetLoopHorizontal - 3s + loopOut");
+
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Select a composition and a layer.");
+        return;
+    }
+    var layer = comp.selectedLayers[0];
+    if (!layer) {
+        alert("Select one layer.");
+        return;
+    }
+
+    var effects = layer.property("ADBE Effect Parade");
+    // Clean old Offset
+    for (var i = 1; i <= effects.numProperties; i++) {
+        if (effects.property(i).matchName === "ADBE Offset") {
+            effects.property(i).remove();
+            break;
+        }
+    }
+    var offsetEffect = effects.addProperty("ADBE Offset");
+    var shiftCenter = offsetEffect.property("ADBE Offset-0001");
+
+    var layerWidth = layer.width;
+    var layerHeight = layer.height;
+
+    if (layerWidth < 1) {
+        try { layerWidth = layer.sourceRectAtTime(comp.time, false).width; } catch(e) {}
+        if (layerWidth < 1) layerWidth = comp.width;
+    }
+    if (layerHeight < 1) {
+        try { layerHeight = layer.sourceRectAtTime(comp.time, false).height; } catch(e) {}
+        if (layerHeight < 1) layerHeight = comp.height;
+    }
+
+    // Clear expression first so we can set keyframes cleanly
+    shiftCenter.expression = "";
+    
+    var startTime = layer.inPoint;
+    var loopDuration = 3; // 1 loop = 3 seconds
+    var endTime = startTime + loopDuration;
+
+    // Extend layer if needed
+    if (layer.outPoint < endTime + 0.1) {
+        layer.outPoint = comp.duration; // extend to comp end so loopOut has room
+    }
+
+    var yCenter = layerHeight / 2;
+
+    // 1 PERFECT LOOP with keyframes
+    shiftCenter.setValueAtTime(startTime, [0, yCenter]);
+    shiftCenter.setValueAtTime(endTime, [layerWidth, yCenter]);
+
+    // Force LINEAR for constant speed
+    try {
+        var k1 = shiftCenter.nearestKeyIndex(startTime);
+        var k2 = shiftCenter.nearestKeyIndex(endTime);
+        shiftCenter.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+        shiftCenter.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+    } catch(e) {}
+
+    // Now apply loopOut() to make it infinitely loop those keyframes
+    shiftCenter.expression = "loopOut();";
 
     app.endUndoGroup();
 }
