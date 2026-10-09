@@ -11,21 +11,87 @@ function JJQuickTools(thisObj) {
     panel.alignChildren = ["fill","top"];
 
 
-    // --- Search field ---
-var searchField = panel.add("edittext", undefined, "Search...");
-searchField.characters = 20;
+	// --- Search row: field + live-search toggle ---
+	var searchRow = panel.add("group");
+	searchRow.orientation = "row";
+	searchRow.alignment = ["fill","top"];
+	searchRow.alignChildren = ["fill","center"];
+	searchRow.spacing = 4;
 
-// Clear placeholder when focused
-searchField.onActivate = function() {
-    if (searchField.text === "Search...") {
-        searchField.text = "";
-    }
-};		
+	var searchField = searchRow.add("edittext", undefined, "Search...");
+	searchField.alignment = ["fill","center"];
+	searchField.characters = 12;
+
+	// LIVE TOGGLE
+	var liveSearch = true;   // default: per-character search ON
+
+	// Two buttons stacked in the same spot; only one is visible at a time
+	var toggleStack = searchRow.add("group");
+	toggleStack.orientation = "stack";
+	toggleStack.alignment = ["right","center"];
+
+	// ON state: a normal button, so it matches your other buttons
+	var liveOnBtn = toggleStack.add("button", undefined, "\uD83D\uDD0D");
+	liveOnBtn.preferredSize = [32, 25];
+	liveOnBtn.helpTip = "Auto-search";
+
+	// OFF state: hand-drawn dark red button
+	var liveOffBtn = toggleStack.add("button", undefined, "");
+	liveOffBtn.preferredSize = [32, 25];
+	liveOffBtn.helpTip = "Auto-search";
+	liveOffBtn.visible = false;
+
+	var OFF_COLOR = [0.2, 0.10, 0.10, 1];   // dark red, adjust to taste
+
+	liveOffBtn.onDraw = function () {
+		var g = this.graphics;
+		var w = this.size.width, h = this.size.height;
+		g.newPath();
+		g.rectPath(0, 0, w, h);
+		g.fillPath(g.newBrush(g.BrushType.SOLID_COLOR, OFF_COLOR));
+
+		var font = ScriptUI.newFont("Segoe UI Emoji", "REGULAR", 13);
+		var label = "\uD83D\uDD0D";
+		var pen = g.newPen(g.PenType.SOLID_COLOR, [0.95, 0.85, 0.85, 1], 1);
+		var size = g.measureString(label, font);
+		g.drawString(label, pen, (w - size[0]) / 2, (h - size[1]) / 2, font);
+	};
+	
+	function setLiveSearch(on) {
+		liveSearch = on;
+		liveOnBtn.visible = on;
+		liveOffBtn.visible = !on;
+		if (on) populateList(currentQuery());   // catch up when switching back on
+	}
+	liveOnBtn.onClick  = function () { setLiveSearch(false); };
+	liveOffBtn.onClick = function () { setLiveSearch(true); };
+	//END OF LIVE SEARCH TOGGLE BUTTON
+	
+	// Layer search button (opens the Layer Search window)
+	var layerSearchBtn = searchRow.add("button", undefined, "👁️");
+	layerSearchBtn.alignment = ["right","center"];
+	layerSearchBtn.preferredSize = [32, 25];
+	layerSearchBtn.helpTip = "Layer search";
+	layerSearchBtn.onClick = function () { layerSearch(); };
+	
+	// True Layer Duplicator button
+	var dupBtn = searchRow.add("button", undefined, "\uD83E\uDDEC");
+	dupBtn.alignment = ["right","center"];
+	dupBtn.preferredSize = [32, 25];
+	dupBtn.helpTip = "True Layer Duplicator";
+	dupBtn.onClick = function () { trueLayerDuplicatorClone(); };
+	
+	// Clear placeholder when focused
+	searchField.onActivate = function() {
+		if (searchField.text === "Search...") {
+			searchField.text = "";
+		}
+	};		
 
 
     // --- Listbox ---
     var toolList = panel.add("listbox", undefined, [], {multiselect:false});
-    toolList.preferredSize = [250, 200];
+    toolList.preferredSize = [200, 200];
 
     // --- All tools with categories ---
     var allTools = [
@@ -72,14 +138,13 @@ searchField.onActivate = function() {
         {category:"Effects", name:"Lens Flare Horizontal"},
         {category:"Effects", name:"Radial Flare"},
         {category:"Effects", name:"Motion Blur Bloom"},
+        {category:"Effects", name:"Offset (Horizontal)"},
         {category:"Effects", name:"Particle Star Burst"},
         {category:"Effects", name:"Particle Sweep"},
         {category:"Effects", name:"Rainbow Refraction"},
         {category:"Effects", name:"Chromatic Abberation"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
-        {category:"Layer Management", name:"Offset Loop Vertical"},
-        {category:"Layer Management", name:"Offset Loop Horizontal"},
         {category:"Timeline Management", name:"Loop Maker"},
         {category:"Audio Management", name:"BGM Compressor"},
         {category:"Collage Maker", name:"Sphere Collage (20)"},
@@ -96,7 +161,7 @@ searchField.onActivate = function() {
 		{category:"Automation", name:"seeLayers"},
 		{category:"Automation", name:"runAutomation"},
 		{category:"Automation", name:"runJSXFile"},
-		{category:"Version", name:"Version 092226-1644"},
+		{category:"Version", name:"Version 100926-1627"},
 
 
     ];
@@ -119,11 +184,23 @@ searchField.onActivate = function() {
     }
     populateList("");
 
-    // --- Search behavior ---
-    searchField.onChanging = function() {
-        populateList(searchField.text.toLowerCase());
-    };
+    function currentQuery() {
+		var q = searchField.text;
+		if (q === "Search...") return "";   // don't filter on the placeholder text
+		return q.toLowerCase();
+	}
 
+	// Live mode: filter on every character
+	searchField.onChanging = function() {
+		if (liveSearch) populateList(currentQuery());
+	};
+
+	// Live mode off: filter only when Enter is pressed (or focus leaves the field)
+	searchField.onChange = function() {
+		if (!liveSearch) populateList(currentQuery());
+	};
+
+	
     // --- Action when selecting a tool ---
     toolList.onDoubleClick = function() {
         var selected = toolList.selection;
@@ -221,12 +298,6 @@ searchField.onActivate = function() {
 			break;
 			case "Create Master Null":
 				createMasterNull();
-			break;
-			case "Offset Loop Vertical":
-				OffsetLoopVertical();
-			break;
-			case "Offset Loop Horizontal":
-				OffsetLoopHorizontal();
 			break;
 			case "Loop Maker":
 				loopMaker();
@@ -1002,29 +1073,48 @@ function trueLayerDuplicatorClone() {
     app.endUndoGroup();
 } 
 
- function scaleIn() {
-        app.beginUndoGroup("Scale In Quick Tool");
+function scaleIn() {
+    app.beginUndoGroup("Scale In Quick Tool");
 
-        var comp = app.project.activeItem;
-        if (!(comp && comp instanceof CompItem)) {
-            alert("Please select a comp.");
-            return;
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Please select a comp.");
+        return;
+    }
+
+    var selLayers = comp.selectedLayers;
+    if (selLayers.length === 0) {
+        alert("Select a layer first.");
+        return;
+    }
+
+    // Define easing once
+    var easeOut = new KeyframeEase(0, 30);
+    var easeIn = new KeyframeEase(0, 100);
+
+    for (var i = 0; i < selLayers.length; i++) {
+        var layer = selLayers[i];
+        var scale = layer.property("ADBE Transform Group").property("ADBE Scale");
+
+        // Get the current scale at current time BEFORE we overwrite it
+        var currentScale = scale.valueAtTime(comp.time, false);
+
+        // Build zero scale with same dimensions (handles 2D vs 3D)
+        var zeroScale = [];
+        for (var d = 0; d < currentScale.length; d++) {
+            zeroScale.push(0);
         }
 
-        var selLayers = comp.selectedLayers;
-        if (selLayers.length === 0) {
-            alert("Select a layer first.");
-            return;
+        // Build ease arrays dynamically based on dimensions
+        var easeOutArray = [];
+        var easeInArray = [];
+        for (var d = 0; d < currentScale.length; d++) {
+            easeOutArray.push(easeOut);
+            easeInArray.push(easeIn);
         }
-
-        var layer = selLayers[0];
-        var scale = layer.property("Transform").property("Scale");
-
-        // Get the current scale value
-        var currentScale = scale.value;
 
         // Add keyframes
-        scale.setValueAtTime(comp.time, [0,0,0]);
+        scale.setValueAtTime(comp.time, zeroScale);
         scale.setValueAtTime(comp.time + 0.5, currentScale);
 
         // Find the indices of the keys we just added
@@ -1035,15 +1125,12 @@ function trueLayerDuplicatorClone() {
         scale.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
         scale.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
 
-        // Define easing
-        var easeOut = new KeyframeEase(0, 30);   // start ease
-        var easeIn  = new KeyframeEase(0, 100);  // end ease
+        // Apply easing
+        scale.setTemporalEaseAtKey(k1, easeOutArray, easeOutArray);
+        scale.setTemporalEaseAtKey(k2, easeInArray, easeInArray);
+    }
 
-        // Apply easing to all 3 dimensions of the keys we added
-        scale.setTemporalEaseAtKey(k1, [easeOut, easeOut, easeOut], [easeOut, easeOut, easeOut]);
-        scale.setTemporalEaseAtKey(k2, [easeIn, easeIn, easeIn], [easeIn, easeIn, easeIn]);
-
-        app.endUndoGroup();
+    app.endUndoGroup();
 }
 
 function scaleOut() {
@@ -5500,141 +5587,6 @@ function ChromaticAbberation() {
             if (target && target !== finalLayer) finalLayer.moveBefore(target);
         } catch(e2) {}
     }
-
-    app.endUndoGroup();
-}
-
-function OffsetLoopVertical() {
-    app.beginUndoGroup("OffsetLoopVertical - 3s + loopOut");
-
-    var comp = app.project.activeItem;
-    if (!(comp && comp instanceof CompItem)) {
-        alert("Select a composition and a layer.");
-        return;
-    }
-    var layer = comp.selectedLayers[0];
-    if (!layer) {
-        alert("Select one layer.");
-        return;
-    }
-
-    var effects = layer.property("ADBE Effect Parade");
-    // Clean old Offset
-    for (var i = 1; i <= effects.numProperties; i++) {
-        if (effects.property(i).matchName === "ADBE Offset") {
-            effects.property(i).remove();
-            break;
-        }
-    }
-    var offsetEffect = effects.addProperty("ADBE Offset");
-    var shiftCenter = offsetEffect.property("ADBE Offset-0001");
-
-    var layerWidth = layer.width;
-    var layerHeight = layer.height;
-
-    if (layerWidth < 1) {
-        try { layerWidth = layer.sourceRectAtTime(comp.time, false).width; } catch(e) {}
-        if (layerWidth < 1) layerWidth = comp.width;
-    }
-    if (layerHeight < 1) {
-        try { layerHeight = layer.sourceRectAtTime(comp.time, false).height; } catch(e) {}
-        if (layerHeight < 1) layerHeight = comp.height;
-    }
-
-    // Clear expression first
-    shiftCenter.expression = "";
-    
-    var startTime = layer.inPoint;
-    var loopDuration = 3;
-    var endTime = startTime + loopDuration;
-
-    if (layer.outPoint < endTime + 0.1) {
-        layer.outPoint = comp.duration;
-    }
-
-    var xCenter = layerWidth / 2;
-
-    // 1 PERFECT VERTICAL LOOP with keyframes
-    shiftCenter.setValueAtTime(startTime, [xCenter, 0]);
-    shiftCenter.setValueAtTime(endTime, [xCenter, layerHeight]);
-
-    try {
-        var k1 = shiftCenter.nearestKeyIndex(startTime);
-        var k2 = shiftCenter.nearestKeyIndex(endTime);
-        shiftCenter.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-        shiftCenter.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-    } catch(e) {}
-
-    shiftCenter.expression = "loopOut();";
-
-    app.endUndoGroup();
-}
-
-function OffsetLoopHorizontal() {
-    app.beginUndoGroup("OffsetLoopHorizontal - 3s + loopOut");
-
-    var comp = app.project.activeItem;
-    if (!(comp && comp instanceof CompItem)) {
-        alert("Select a composition and a layer.");
-        return;
-    }
-    var layer = comp.selectedLayers[0];
-    if (!layer) {
-        alert("Select one layer.");
-        return;
-    }
-
-    var effects = layer.property("ADBE Effect Parade");
-    // Clean old Offset
-    for (var i = 1; i <= effects.numProperties; i++) {
-        if (effects.property(i).matchName === "ADBE Offset") {
-            effects.property(i).remove();
-            break;
-        }
-    }
-    var offsetEffect = effects.addProperty("ADBE Offset");
-    var shiftCenter = offsetEffect.property("ADBE Offset-0001");
-
-    var layerWidth = layer.width;
-    var layerHeight = layer.height;
-
-    if (layerWidth < 1) {
-        try { layerWidth = layer.sourceRectAtTime(comp.time, false).width; } catch(e) {}
-        if (layerWidth < 1) layerWidth = comp.width;
-    }
-    if (layerHeight < 1) {
-        try { layerHeight = layer.sourceRectAtTime(comp.time, false).height; } catch(e) {}
-        if (layerHeight < 1) layerHeight = comp.height;
-    }
-
-    // Clear expression first so we can set keyframes cleanly
-    shiftCenter.expression = "";
-    
-    var startTime = layer.inPoint;
-    var loopDuration = 3; // 1 loop = 3 seconds
-    var endTime = startTime + loopDuration;
-
-    // Extend layer if needed
-    if (layer.outPoint < endTime + 0.1) {
-        layer.outPoint = comp.duration; // extend to comp end so loopOut has room
-    }
-
-    var yCenter = layerHeight / 2;
-
-    // 1 PERFECT LOOP with keyframes
-    shiftCenter.setValueAtTime(startTime, [0, yCenter]);
-    shiftCenter.setValueAtTime(endTime, [layerWidth, yCenter]);
-
-    // Force LINEAR for constant speed
-    try {
-        var k1 = shiftCenter.nearestKeyIndex(startTime);
-        var k2 = shiftCenter.nearestKeyIndex(endTime);
-        shiftCenter.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-        shiftCenter.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-    } catch(e) {}
-
-    // Now apply loopOut() to make it infinitely loop those keyframes
-    shiftCenter.expression = "loopOut();";
 
     app.endUndoGroup();
 }
