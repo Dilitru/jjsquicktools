@@ -260,7 +260,7 @@ function trueLayerDuplicatorClone() {
             [ {label: "\u0192x", tooltip: "Add Expression", onClick: addExpressionToSelected}, {label: "", tooltip: ""}, {label: "", tooltip: ""}, {label: "", tooltip: ""} ]
         ],
         "TRANSFORM": [
-            [ {label: "\uD83D\uDDBC\uFE0F", tooltip: "Fit to Comp", onClick: transform_fitComp}, {label: "\u2194\uFE0F", tooltip: "Fit to Comp Width", onClick: transform_fitCompWidth}, {label: "\u2195\uFE0F", tooltip: "Fit to Comp Height", onClick: transform_fitCompHeight}, {label: "\uD83C\uDFAF", tooltip: "Center In View", onClick: transform_centerView} ],
+            [ {label: "⛶", tooltip: "Fit to Comp", onClick: transform_fitComp}, {label: "\u2194\uFE0F", tooltip: "Fit to Comp Width", onClick: transform_fitCompWidth}, {label: "\u2195\uFE0F", tooltip: "Fit to Comp Height", onClick: transform_fitCompHeight}, {label: "\uD83C\uDFAF", tooltip: "Center In View", onClick: transform_centerView} ],
             [ {label: "\u2693", tooltip: "Center Anchor Point in Layer Content", onClick: transform_centerAnchor}, {label: "\u2194\uFE0F\uD83E\uDE9E", tooltip: "Flip Horizontal", onClick: transform_flipH}, {label: "\u2195\uFE0F\uD83E\uDE9E", tooltip: "Flip Vertical", onClick: transform_flipV}, {label: "", tooltip: ""} ]
         ],
         "EDIT": [
