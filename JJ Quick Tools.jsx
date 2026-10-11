@@ -1,6 +1,27 @@
 // JJ Quick Tools with Categories + Search
 // Save in Scripts/ScriptUI Panels
 
+// ─────────────────────────────────────────────────────────────
+// Auto-trim (toggled by the button next to Auto-search)
+//   Animate In  tools: trim the layer's inPoint  to the current time
+//   Animate Out tools: trim the layer's outPoint to the current time
+//   If the current time is outside the layer, nothing is trimmed
+//   and the animation is just applied.
+// ─────────────────────────────────────────────────────────────
+var JJ_AUTO_TRIM = true;
+
+function qtTrimIn(layer, t) {
+    if (!JJ_AUTO_TRIM) return;
+    if (layer.locked) return;
+    if (t > layer.inPoint && t < layer.outPoint) layer.inPoint = t;
+}
+
+function qtTrimOut(layer, t) {
+    if (!JJ_AUTO_TRIM) return;
+    if (layer.locked) return;
+    if (t > layer.inPoint && t < layer.outPoint) layer.outPoint = t;
+}
+
 function JJQuickTools(thisObj) {
     // The second argument "JJ Quick Tools" is the display name in AE's Window menu
     var panel = (thisObj instanceof Panel)
@@ -67,6 +88,48 @@ function JJQuickTools(thisObj) {
 	liveOffBtn.onClick = function () { setLiveSearch(true); };
 	//END OF LIVE SEARCH TOGGLE BUTTON
 	
+	// AUTO-TRIM TOGGLE (on/off, same look as Auto-search)
+	// Two buttons stacked in the same spot; only one is visible at a time
+	var trimStack = searchRow.add("group");
+	trimStack.orientation = "stack";
+	trimStack.alignment = ["right","center"];
+
+	// ON state: a normal button
+	var trimOnBtn = trimStack.add("button", undefined, "\u2702");
+	trimOnBtn.preferredSize = [32, 25];
+	trimOnBtn.helpTip = "Auto-trim";
+
+	// OFF state: hand-drawn dark red button
+	var trimOffBtn = trimStack.add("button", undefined, "");
+	trimOffBtn.preferredSize = [32, 25];
+	trimOffBtn.helpTip = "Auto-trim";
+
+	var TRIM_OFF_COLOR = [0.2, 0.10, 0.10, 1];   // same dark red as Auto-search OFF
+
+	trimOffBtn.onDraw = function () {
+		var g = this.graphics;
+		var w = this.size.width, h = this.size.height;
+		g.newPath();
+		g.rectPath(0, 0, w, h);
+		g.fillPath(g.newBrush(g.BrushType.SOLID_COLOR, TRIM_OFF_COLOR));
+
+		var font = ScriptUI.newFont("Segoe UI Emoji", "REGULAR", 13);
+		var label = "\u2702";
+		var pen = g.newPen(g.PenType.SOLID_COLOR, [0.95, 0.85, 0.85, 1], 1);
+		var size = g.measureString(label, font);
+		g.drawString(label, pen, (w - size[0]) / 2, (h - size[1]) / 2, font);
+	};
+
+	function setAutoTrim(on) {
+		JJ_AUTO_TRIM = on;
+		trimOnBtn.visible = on;
+		trimOffBtn.visible = !on;
+	}
+	trimOnBtn.onClick  = function () { setAutoTrim(false); };
+	trimOffBtn.onClick = function () { setAutoTrim(true); };
+	setAutoTrim(JJ_AUTO_TRIM);   // on by default
+	//END OF AUTO-TRIM TOGGLE BUTTON
+
 	// Layer search button (opens the Layer Search window)
 	var layerSearchBtn = searchRow.add("button", undefined, "👁️");
 	layerSearchBtn.alignment = ["right","center"];
@@ -145,8 +208,10 @@ function JJQuickTools(thisObj) {
         {category:"Effects", name:"Particle Sweep"},
         {category:"Effects", name:"Rainbow Refraction"},
         {category:"Effects", name:"Chromatic Abberation"},
+        {category:"Effects", name:"Anime Speed Lines"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
+        {category:"Layer Management", name:"Create Template (Project)"},
         {category:"Timeline Management", name:"Loop Maker"},
         {category:"Audio Management", name:"BGM Compressor"},
         {category:"Collage Maker", name:"Sphere Collage (20)"},
@@ -208,6 +273,12 @@ function JJQuickTools(thisObj) {
         var selected = toolList.selection;
         if (!selected || !selected.enabled) return; // ignore category labels
         var toolName = selected.text.replace(/^\s+/, ""); // trim spaces
+
+        // Project-level tools: no comp or layer needed (works on a fresh project)
+        if (toolName === "Create Template (Project)") {
+            buildStarterTemplate();
+            return;
+        }
 
         var comp = app.project.activeItem;
         if (!comp || comp.selectedLayers.length === 0) return;
@@ -298,6 +369,9 @@ function JJQuickTools(thisObj) {
 			case "Chromatic Abberation":
 			    ChromaticAbberation();
 		    break;
+			case "Anime Speed Lines":
+			    animeSpeedLines();
+		    break;
 			case "Quick Light Sweep":
 			    quickLightSweep();
 		    break;
@@ -306,6 +380,9 @@ function JJQuickTools(thisObj) {
 			break;
 			case "Create Master Null":
 				createMasterNull();
+			break;
+			case "Create Template (Project)":
+				buildStarterTemplate();
 			break;
 			case "Loop Maker":
 				loopMaker();
@@ -517,57 +594,83 @@ function applyColorBalanceSaturation(comp, layer) {
 }
 
 function applyFadeFromBlack(comp, layer) {
+    // Applies to ALL selected layers (the 'layer' arg is kept only for compatibility)
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    var selLayers = comp.selectedLayers;
+    if (selLayers.length === 0) { alert("Select a layer first."); return; }
+
     app.beginUndoGroup("Quick Tools: Fade from Black");
+    try {
+        var t = comp.time;
+        for (var i = 0; i < selLayers.length; i++) {
+            var lyr = selLayers[i];
+            if (lyr.locked) { continue; }
 
-    // Add the effect
-    var fx = layer.Effects.addProperty("Color Balance (HLS)");
+            qtTrimIn(lyr, t);
 
-    // Rename the effect
-    fx.name = "fade from black";
+            // Add the effect
+            var fx = lyr.Effects.addProperty("Color Balance (HLS)");
+            fx.name = "fade from black";
 
-    // Grab Lightness property
-    var lightness = fx.property("Lightness");
+            // Grab Lightness property
+            var lightness = fx.property("Lightness");
 
-    // Add keyframes
-    var k1 = lightness.addKey(comp.time);
-    var k2 = lightness.addKey(comp.time+1);
+            // Add keyframes
+            var k1 = lightness.addKey(t);
+            var k2 = lightness.addKey(t + 1);
 
-    // Assign values
-    lightness.setValueAtKey(k1, -100);
-    lightness.setValueAtKey(k2, 0);
+            // Assign values
+            lightness.setValueAtKey(k1, -100);
+            lightness.setValueAtKey(k2, 0);
 
-    // Interpolation (Bezier for consistency)
-    lightness.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
-    lightness.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
-
-    app.endUndoGroup();
+            // Interpolation (Bezier for consistency)
+            lightness.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+            lightness.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+        }
+    } finally {
+        app.endUndoGroup();
+    }
 }
 
 function applyFadeFromWhite(comp, layer) {
-    app.beginUndoGroup("Quick Tools: Fade from Black");
+    // Applies to ALL selected layers (the 'layer' arg is kept only for compatibility)
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    var selLayers = comp.selectedLayers;
+    if (selLayers.length === 0) { alert("Select a layer first."); return; }
 
-    // Add the effect
-    var fx = layer.Effects.addProperty("Color Balance (HLS)");
+    app.beginUndoGroup("Quick Tools: Fade from White");
+    try {
+        var t = comp.time;
+        for (var i = 0; i < selLayers.length; i++) {
+            var lyr = selLayers[i];
+            if (lyr.locked) { continue; }
 
-    // Rename the effect
-    fx.name = "fade from black";
+            qtTrimIn(lyr, t);
 
-    // Grab Lightness property
-    var lightness = fx.property("Lightness");
+            // Add the effect
+            var fx = lyr.Effects.addProperty("Color Balance (HLS)");
+            fx.name = "fade from white";
 
-    // Add keyframes
-    var k1 = lightness.addKey(comp.time);
-    var k2 = lightness.addKey(comp.time+1);
+            // Grab Lightness property
+            var lightness = fx.property("Lightness");
 
-    // Assign values
-    lightness.setValueAtKey(k1, 100);
-    lightness.setValueAtKey(k2, 0);
+            // Add keyframes
+            var k1 = lightness.addKey(t);
+            var k2 = lightness.addKey(t + 1);
 
-    // Interpolation (Bezier for consistency)
-    lightness.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
-    lightness.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+            // Assign values
+            lightness.setValueAtKey(k1, 100);
+            lightness.setValueAtKey(k2, 0);
 
-    app.endUndoGroup();
+            // Interpolation (Bezier for consistency)
+            lightness.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+            lightness.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+        }
+    } finally {
+        app.endUndoGroup();
+    }
 }
 
 function lensFlareHorizontal() {
@@ -1082,8 +1185,6 @@ function trueLayerDuplicatorClone() {
 } 
 
 function scaleIn() {
-    app.beginUndoGroup("Scale In Quick Tool");
-
     var comp = app.project.activeItem;
     if (!(comp && comp instanceof CompItem)) {
         alert("Please select a comp.");
@@ -1096,49 +1197,59 @@ function scaleIn() {
         return;
     }
 
-    // Define easing once
-    var easeOut = new KeyframeEase(0, 30);
-    var easeIn = new KeyframeEase(0, 100);
+    app.beginUndoGroup("Scale In Quick Tool");
+    try {
+        var t = comp.time;
 
-    for (var i = 0; i < selLayers.length; i++) {
-        var layer = selLayers[i];
-        var scale = layer.property("ADBE Transform Group").property("ADBE Scale");
+        // Define easing once
+        var easeOut = new KeyframeEase(0, 30);
+        var easeIn = new KeyframeEase(0, 100);
 
-        // Get the current scale at current time BEFORE we overwrite it
-        var currentScale = scale.valueAtTime(comp.time, false);
+        for (var i = 0; i < selLayers.length; i++) {
+            var layer = selLayers[i];
+            if (layer.locked) { continue; }
 
-        // Build zero scale with same dimensions (handles 2D vs 3D)
-        var zeroScale = [];
-        for (var d = 0; d < currentScale.length; d++) {
-            zeroScale.push(0);
+            qtTrimIn(layer, t);
+
+            var scale = layer.property("ADBE Transform Group").property("ADBE Scale");
+            if (!scale) { continue; }
+
+            // Get the current scale at current time BEFORE we overwrite it
+            var currentScale = scale.valueAtTime(t, false);
+
+            // Build zero scale with same dimensions (handles 2D vs 3D)
+            var zeroScale = [];
+            for (var d = 0; d < currentScale.length; d++) {
+                zeroScale.push(0);
+            }
+
+            // Build ease arrays dynamically based on dimensions
+            var easeOutArray = [];
+            var easeInArray = [];
+            for (var d2 = 0; d2 < currentScale.length; d2++) {
+                easeOutArray.push(easeOut);
+                easeInArray.push(easeIn);
+            }
+
+            // Add keyframes
+            scale.setValueAtTime(t, zeroScale);
+            scale.setValueAtTime(t + 0.5, currentScale);
+
+            // Find the indices of the keys we just added
+            var k1 = scale.nearestKeyIndex(t);
+            var k2 = scale.nearestKeyIndex(t + 0.5);
+
+            // Set interpolation type
+            scale.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+            scale.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+
+            // Apply easing
+            scale.setTemporalEaseAtKey(k1, easeOutArray, easeOutArray);
+            scale.setTemporalEaseAtKey(k2, easeInArray, easeInArray);
         }
-
-        // Build ease arrays dynamically based on dimensions
-        var easeOutArray = [];
-        var easeInArray = [];
-        for (var d = 0; d < currentScale.length; d++) {
-            easeOutArray.push(easeOut);
-            easeInArray.push(easeIn);
-        }
-
-        // Add keyframes
-        scale.setValueAtTime(comp.time, zeroScale);
-        scale.setValueAtTime(comp.time + 0.5, currentScale);
-
-        // Find the indices of the keys we just added
-        var k1 = scale.nearestKeyIndex(comp.time);
-        var k2 = scale.nearestKeyIndex(comp.time + 0.5);
-
-        // Set interpolation type
-        scale.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
-        scale.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
-
-        // Apply easing
-        scale.setTemporalEaseAtKey(k1, easeOutArray, easeOutArray);
-        scale.setTemporalEaseAtKey(k2, easeInArray, easeInArray);
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 function ScaleIn3s() {
@@ -1188,6 +1299,8 @@ function ScaleIn3s() {
 
     for (var l = 0; l < sel.length; l++) {
         var layer = sel[l];
+        if (layer.locked) { continue; }
+        qtTrimIn(layer, currentTime);
         var transform = layer.property("ADBE Transform Group");
         var scaleProp = transform.property("ADBE Scale");
         if (!scaleProp) continue;
@@ -1259,8 +1372,6 @@ function ScaleIn3s() {
 }
 
 function scaleOut() {
-    app.beginUndoGroup("Scale Out Quick Tool");
-
     var comp = app.project.activeItem;
     if (!(comp && comp instanceof CompItem)) {
         alert("Please select a comp.");
@@ -1273,38 +1384,53 @@ function scaleOut() {
         return;
     }
 
-    var t = comp.time;
-
+    app.beginUndoGroup("Scale Out Quick Tool");
     try {
+        var t = comp.time;
+        var dur = 0.5;           // animation ENDS at the current time
+        var tStart = t - dur;
+
+        // Define easing
+        var easeOut = new KeyframeEase(0, 30);   // start ease
+        var easeIn  = new KeyframeEase(0, 100);  // end ease
+
         for (var i = 0; i < selLayers.length; i++) {
             var layer = selLayers[i];
             if (layer.locked) { continue; }
 
+            qtTrimOut(layer, t);
+
             var scale = layer.property("Transform").property("Scale");
             if (!scale) { continue; }
 
-            // Get the current scale value
-            var currentScale = scale.value;
+            // Scale at the start of the animation (read BEFORE adding keys)
+            var startScale = scale.valueAtTime(tStart, false);
+
+            // Zero scale with same dimensions
+            var endScale = [];
+            var easeOutArray = [];
+            var easeInArray = [];
+            for (var d = 0; d < startScale.length; d++) {
+                endScale.push(0);
+                easeOutArray.push(easeOut);
+                easeInArray.push(easeIn);
+            }
 
             // Add keyframes
-            scale.setValueAtTime(t, currentScale);
-            scale.setValueAtTime(t + 0.5, [0, 0, 0]);
+            scale.setValueAtTime(tStart, startScale);
+            scale.setValueAtTime(t, endScale);
 
             // Find the indices of the keys we just added
-            var k1 = scale.nearestKeyIndex(t);
-            var k2 = scale.nearestKeyIndex(t + 0.5);
+            var k1 = scale.nearestKeyIndex(tStart);
+            var k2 = scale.nearestKeyIndex(t);
 
             // Set interpolation type
             scale.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
             scale.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
 
-            // Define easing
-            var easeOut = new KeyframeEase(0, 30);   // start ease
-            var easeIn  = new KeyframeEase(0, 100);  // end ease
-
-            // Apply easing to all 3 dimensions of the keys we added
-            scale.setTemporalEaseAtKey(k1, [easeOut, easeOut, easeOut], [easeOut, easeOut, easeOut]);
-            scale.setTemporalEaseAtKey(k2, [easeIn, easeIn, easeIn], [easeIn, easeIn, easeIn]);
+            // Apply easing
+            scale.setTemporalEaseAtKey(k1, easeOutArray, easeOutArray);
+            scale.setTemporalEaseAtKey(k2, easeInArray, easeInArray);
         }
     } finally {
         app.endUndoGroup();
@@ -2638,42 +2764,47 @@ function ShowMatchNames() {
 }
 
 function FadeIn() {
-    app.beginUndoGroup("Fade In");
-
     var comp = app.project.activeItem;
     if (!(comp && comp instanceof CompItem)) {
         alert("Please select a composition.");
-        app.endUndoGroup();
         return;
     }
 
     var selLayers = comp.selectedLayers;
     if (selLayers.length < 1) {
         alert("Please select one or more layers.");
-        app.endUndoGroup();
         return;
     }
 
-    for (var i = 0; i < selLayers.length; i++) {
-        var layer = selLayers[i];
-        var opacity = layer.property("Transform").property("Opacity");
+    app.beginUndoGroup("Fade In");
+    try {
+        var t = comp.time;
 
-        if (opacity) {
-            // Add keyframes
-            var k1 = opacity.addKey(comp.time);
-            var k2 = opacity.addKey(comp.time + 0.5);
+        for (var i = 0; i < selLayers.length; i++) {
+            var layer = selLayers[i];
+            if (layer.locked) { continue; }
 
-            // Assign values
-            opacity.setValueAtKey(k1, 0);
-            opacity.setValueAtKey(k2, 100);
+            qtTrimIn(layer, t);
 
-            // Set interpolation type
-            opacity.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
-            opacity.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+            var opacity = layer.property("Transform").property("Opacity");
+
+            if (opacity) {
+                // Add keyframes
+                var k1 = opacity.addKey(t);
+                var k2 = opacity.addKey(t + 0.5);
+
+                // Assign values
+                opacity.setValueAtKey(k1, 0);
+                opacity.setValueAtKey(k2, 100);
+
+                // Set interpolation type
+                opacity.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+                opacity.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+            }
         }
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 // SphereCollage — All-in-one ExtendScript (solid hidden when media added)
@@ -3822,10 +3953,10 @@ function SlideInFromTop() {
     app.beginUndoGroup("Slide In From Top");
 
     var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); app.endUndoGroup(); return; }
 
     var layers = comp.selectedLayers;
-    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+    if (layers.length < 1) { alert("Please select at least one layer."); app.endUndoGroup(); return; }
 
     var t = comp.time;
 
@@ -3833,6 +3964,7 @@ function SlideInFromTop() {
         for (var i = 0; i < layers.length; i++) {
             var layer = layers[i];
             if (layer.locked) { continue; }
+            qtTrimIn(layer, t);
 
             var pos = layer.property("Transform").property("Position");
             if (!pos) { continue; }
@@ -3855,8 +3987,8 @@ function SlideInFromTop() {
             var easeOut = new KeyframeEase(0, 30);   // start ease
             var easeIn  = new KeyframeEase(0, 100);  // end ease
 
-            pos.setTemporalEaseAtKey(k1, [easeOut, easeOut], [easeOut, easeOut]);
-            pos.setTemporalEaseAtKey(k2, [easeIn, easeIn], [easeIn, easeIn]);
+            pos.setTemporalEaseAtKey(k1, [easeOut], [easeOut]);
+            pos.setTemporalEaseAtKey(k2, [easeIn], [easeIn]);
         }
     } finally {
         app.endUndoGroup();
@@ -3866,14 +3998,15 @@ function SlideInFromTop() {
 function SlideInFromLeft() {
     app.beginUndoGroup("Slide In From Left");
     var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); app.endUndoGroup(); return; }
     var layers = comp.selectedLayers;
-    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+    if (layers.length < 1) { alert("Please select at least one layer."); app.endUndoGroup(); return; }
     var t = comp.time;
     try {
         for (var i = 0; i < layers.length; i++) {
             var layer = layers[i];
             if (layer.locked) { continue; }
+            qtTrimIn(layer, t);
             var pos = layer.property("Transform").property("Position");
             if (!pos) { continue; }
             var finalPos = pos.value;
@@ -3901,14 +4034,15 @@ function SlideInFromLeft() {
 function SlideInFromRight() {
     app.beginUndoGroup("Slide In From Right");
     var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); app.endUndoGroup(); return; }
     var layers = comp.selectedLayers;
-    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+    if (layers.length < 1) { alert("Please select at least one layer."); app.endUndoGroup(); return; }
     var t = comp.time;
     try {
         for (var i = 0; i < layers.length; i++) {
             var layer = layers[i];
             if (layer.locked) { continue; }
+            qtTrimIn(layer, t);
             var pos = layer.property("Transform").property("Position");
             if (!pos) { continue; }
             var finalPos = pos.value;
@@ -3936,14 +4070,15 @@ function SlideInFromRight() {
 function SlideInFromBottom() {
     app.beginUndoGroup("Slide In From Bottom");
     var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); app.endUndoGroup(); return; }
     var layers = comp.selectedLayers;
-    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+    if (layers.length < 1) { alert("Please select at least one layer."); app.endUndoGroup(); return; }
     var t = comp.time;
     try {
         for (var i = 0; i < layers.length; i++) {
             var layer = layers[i];
             if (layer.locked) { continue; }
+            qtTrimIn(layer, t);
             var pos = layer.property("Transform").property("Position");
             if (!pos) { continue; }
             var finalPos = pos.value;
@@ -3971,10 +4106,10 @@ function SlideInFromRandom() {
     app.beginUndoGroup("Slide In From Random");
 
     var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); app.endUndoGroup(); return; }
 
     var layers = comp.selectedLayers;
-    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+    if (layers.length < 1) { alert("Please select at least one layer."); app.endUndoGroup(); return; }
 
     var t = comp.time;
     var compDiagonal = Math.sqrt(Math.pow(comp.width, 2) + Math.pow(comp.height, 2));
@@ -3983,6 +4118,7 @@ function SlideInFromRandom() {
         for (var i = 0; i < layers.length; i++) {
             var layer = layers[i];
             if (layer.locked) { continue; }
+            qtTrimIn(layer, t);
 
             var pos = layer.property("Transform").property("Position");
             if (!pos) { continue; }
@@ -4023,47 +4159,58 @@ function SlideInFromRandom() {
 }
 
 function CardIn() {
-    app.beginUndoGroup("Card In");
-
     var comp = app.project.activeItem;
     if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
     var layers = comp.selectedLayers;
     if (layers.length < 1) { alert("Please select at least one layer."); return; }
 
-    var t = comp.time; // current timeline time
+    app.beginUndoGroup("Card In");
+    try {
+        var t = comp.time; // current timeline time
+        var i, layer;
 
-    for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
-
-        // 1) Set to 3D if not already
-        if (!layer.threeDLayer) {
-            layer.threeDLayer = true;
+        // 1) Set all selected layers to 3D
+        for (i = 0; i < layers.length; i++) {
+            layer = layers[i];
+            if (layer.locked) { continue; }
+            if (!layer.threeDLayer) {
+                layer.threeDLayer = true;
+            }
         }
 
-        // 2) Slide in from bottom
+        // 2) Slide in from bottom (once, applies to all selected layers + auto-trim)
         SlideInFromBottom();
 
-        // 3) Y Rotation from -180 → 0 over 1s
-        var yRot = layer.property("Transform").property("Y Rotation");
-        yRot.setValueAtTime(t, -180);
-        yRot.setValueAtTime(t+1, 0);
+        // 3) Y Rotation from -180 -> 0 over 1s
+        for (i = 0; i < layers.length; i++) {
+            layer = layers[i];
+            if (layer.locked) { continue; }
 
-        // Apply easing (fast start, slow end)
-        yRot.setInterpolationTypeAtKey(1, KeyframeInterpolationType.BEZIER);
-        yRot.setInterpolationTypeAtKey(2, KeyframeInterpolationType.BEZIER);
-        var easeOutStart = [new KeyframeEase(0,30)];
-        var easeInEnd   = [new KeyframeEase(0,100)];
-        yRot.setTemporalEaseAtKey(1, [new KeyframeEase(0,0)], easeOutStart);
-        yRot.setTemporalEaseAtKey(2, easeInEnd, [new KeyframeEase(0,0)]);
+            var yRot = layer.property("Transform").property("Y Rotation");
+            if (!yRot) { continue; }
+            yRot.setValueAtTime(t, -180);
+            yRot.setValueAtTime(t + 1, 0);
+
+            var k1 = yRot.nearestKeyIndex(t);
+            var k2 = yRot.nearestKeyIndex(t + 1);
+
+            // Apply easing (fast start, slow end)
+            yRot.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+            yRot.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+            var easeOutStart = [new KeyframeEase(0,30)];
+            var easeInEnd   = [new KeyframeEase(0,100)];
+            yRot.setTemporalEaseAtKey(k1, [new KeyframeEase(0,0)], easeOutStart);
+            yRot.setTemporalEaseAtKey(k2, easeInEnd, [new KeyframeEase(0,0)]);
+        }
+
+        // 4) Move current time forward 0.3s
+        comp.time = t + 0.3;
+
+        // 5) Trigger quickLightSweep()
+        quickLightSweep();
+    } finally {
+        app.endUndoGroup();
     }
-
-    // 4) Move current time forward 0.3s
-    comp.time = t + 0.3;
-
-    // 5) Trigger quickLightSweep()
-    quickLightSweep();
-
-    app.endUndoGroup();
 }
 
 
@@ -4183,6 +4330,7 @@ function fadeOut() {
     if (layers.length === 0) { alert("No layers selected."); return; }
 
     var t = comp.time;
+    var tStart = t - 0.5;   // fade ENDS at the current time
 
     app.beginUndoGroup("Quick Tool: fadeOut");
     try {
@@ -4194,9 +4342,11 @@ function fadeOut() {
             var opacity = layer.property("Transform").property("Opacity");
             if (!opacity) { continue; } // skip layers without Opacity (e.g. some guide/camera types)
 
-            var currentOpacity = opacity.value;
-            opacity.setValueAtTime(t, currentOpacity);
-            opacity.setValueAtTime(t + 0.5, 0);
+            qtTrimOut(layer, t);
+
+            var startOpacity = opacity.valueAtTime(tStart, false);
+            opacity.setValueAtTime(tStart, startOpacity);
+            opacity.setValueAtTime(t, 0);
         }
     } finally {
         app.endUndoGroup();
@@ -4213,44 +4363,55 @@ function fadePlusScaleIn() {
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
 
-    app.beginUndoGroup("Quick Tool: fadePlusScaleIn");
-
     var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("No layers selected."); return; }
+
     var t = comp.time;
 
-    for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
+    app.beginUndoGroup("Quick Tool: fadePlusScaleIn");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
 
-        // ── Opacity (no easing) ──────────────────────────────
-        var opacity = layer.property("Transform").property("Opacity");
-        var currentOpacity = opacity.value;
+            qtTrimIn(layer, t);
 
-        opacity.setValueAtTime(t, 0);
-        opacity.setValueAtTime(t + 0.5, currentOpacity);
+            // ── Opacity (no easing) ──────────────────────────────
+            var opacity = layer.property("Transform").property("Opacity");
+            if (opacity) {
+                var currentOpacity = opacity.valueAtTime(t, false);
+                opacity.setValueAtTime(t, 0);
+                opacity.setValueAtTime(t + 0.5, currentOpacity);
+            }
 
-        // ── Scale (eased) ────────────────────────────────────
-        var scale = layer.property("Transform").property("Scale");
-        var currentScale = scale.value; // [x, y, z]
+            // ── Scale (eased) ────────────────────────────────────
+            var scale = layer.property("Transform").property("Scale");
+            if (!scale) { continue; }
+            var currentScale = scale.valueAtTime(t, false); // [x, y, z]
 
-        var startScale = [currentScale[0] * 0.5,
-                          currentScale[1] * 0.5,
-                          currentScale[2] * 0.5];
+            var startScale = [currentScale[0] * 0.5,
+                              currentScale[1] * 0.5,
+                              currentScale[2] * 0.5];
 
-        scale.setValueAtTime(t, startScale);
-        scale.setValueAtTime(t + 0.5, currentScale);
+            scale.setValueAtTime(t, startScale);
+            scale.setValueAtTime(t + 0.5, currentScale);
 
-        var easeIn  = new KeyframeEase(0, 30);
-        var easeOut = new KeyframeEase(0, 100);
+            var k1 = scale.nearestKeyIndex(t);
+            var k2 = scale.nearestKeyIndex(t + 0.5);
 
-        scale.setTemporalEaseAtKey(1,
-            [easeIn,  easeIn,  easeIn ],
-            [easeOut, easeOut, easeOut]);
-        scale.setTemporalEaseAtKey(2,
-            [easeIn,  easeIn,  easeIn ],
-            [easeOut, easeOut, easeOut]);
+            var easeIn  = new KeyframeEase(0, 30);
+            var easeOut = new KeyframeEase(0, 100);
+
+            scale.setTemporalEaseAtKey(k1,
+                [easeIn,  easeIn,  easeIn ],
+                [easeOut, easeOut, easeOut]);
+            scale.setTemporalEaseAtKey(k2,
+                [easeIn,  easeIn,  easeIn ],
+                [easeOut, easeOut, easeOut]);
+        }
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 
@@ -4274,29 +4435,35 @@ function fadePlusScaleDown() {
             var layer = layers[i];
             if (layer.locked) { continue; }
 
+            qtTrimIn(layer, t);
+
             // ── Opacity (no easing) ──────────────────────────
             var opacity = layer.property("Transform").property("Opacity");
-            if (!opacity) { continue; }
-            var currentOpacity = opacity.value;
-            opacity.setValueAtTime(t, 0);
-            opacity.setValueAtTime(t + 0.5, currentOpacity);
+            if (opacity) {
+                var currentOpacity = opacity.valueAtTime(t, false);
+                opacity.setValueAtTime(t, 0);
+                opacity.setValueAtTime(t + 0.5, currentOpacity);
+            }
 
             // ── Scale (eased) ─────────────────────────────────
             var scale = layer.property("Transform").property("Scale");
             if (!scale) { continue; }
-            var currentScale = scale.value; // [x, y, z]
+            var currentScale = scale.valueAtTime(t, false); // [x, y, z]
             var startScale = [currentScale[0] * 3,
                               currentScale[1] * 3,
                               currentScale[2] * 3];
             scale.setValueAtTime(t, startScale);
             scale.setValueAtTime(t + 0.5, currentScale);
 
+            var k1 = scale.nearestKeyIndex(t);
+            var k2 = scale.nearestKeyIndex(t + 0.5);
+
             var easeIn  = new KeyframeEase(0, 30);
             var easeOut = new KeyframeEase(0, 70);
-            scale.setTemporalEaseAtKey(1,
+            scale.setTemporalEaseAtKey(k1,
                 [easeIn,  easeIn,  easeIn ],
                 [easeOut, easeOut, easeOut]);
-            scale.setTemporalEaseAtKey(2,
+            scale.setTemporalEaseAtKey(k2,
                 [easeIn,  easeIn,  easeIn ],
                 [easeOut, easeOut, easeOut]);
         }
@@ -4329,9 +4496,11 @@ function scaleInBounce() {
             var layer = layers[i];
             if (layer.locked) { continue; }
 
+            qtTrimIn(layer, t);
+
             var scale = layer.property("Transform").property("Scale");
             if (!scale) { continue; }
-            var currentScale = scale.value;
+            var currentScale = scale.valueAtTime(t, false);
 
             var zeroScale = [0, 0, 0];
             var peakScale = [currentScale[0] * 1.2,
@@ -4344,8 +4513,9 @@ function scaleInBounce() {
 
             // Default Easy Ease: influence 33.33 on both sides, speed 0
             var easyEase = new KeyframeEase(0, 33.33);
-            for (var k = 1; k <= 3; k++) {
-                scale.setTemporalEaseAtKey(k,
+            var times = [t, t + 0.25, t + 0.5];
+            for (var k = 0; k < times.length; k++) {
+                scale.setTemporalEaseAtKey(scale.nearestKeyIndex(times[k]),
                     [easyEase, easyEase, easyEase],
                     [easyEase, easyEase, easyEase]);
             }
@@ -4364,21 +4534,29 @@ function fadeToBlack() {
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
 
-    app.beginUndoGroup("Quick Tool: fadeToBlack");
-
     var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("No layers selected."); return; }
+
     var t = comp.time;
+    var tStart = t - 0.5;   // fade ENDS at the current time
 
-    for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
-        var effect = layer.Effects.addProperty("ADBE Color Balance (HLS)");
-        var lightness = effect.property("ADBE Color Balance (HLS)-0002");
+    app.beginUndoGroup("Quick Tool: fadeToBlack");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
 
-        lightness.setValueAtTime(t,       0);
-        lightness.setValueAtTime(t + 0.5, -100);
+            qtTrimOut(layer, t);
+
+            var effect = layer.Effects.addProperty("ADBE Color Balance (HLS)");
+            var lightness = effect.property("ADBE Color Balance (HLS)-0002");
+
+            lightness.setValueAtTime(tStart, 0);
+            lightness.setValueAtTime(t,      -100);
+        }
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 
@@ -4391,21 +4569,29 @@ function fadeToWhite() {
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
 
-    app.beginUndoGroup("Quick Tool: fadeToWhite");
-
     var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("No layers selected."); return; }
+
     var t = comp.time;
+    var tStart = t - 0.5;   // fade ENDS at the current time
 
-    for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
-        var effect = layer.Effects.addProperty("ADBE Color Balance (HLS)");
-        var lightness = effect.property("ADBE Color Balance (HLS)-0002");
+    app.beginUndoGroup("Quick Tool: fadeToWhite");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
 
-        lightness.setValueAtTime(t,       0);
-        lightness.setValueAtTime(t + 0.5, 100);
+            qtTrimOut(layer, t);
+
+            var effect = layer.Effects.addProperty("ADBE Color Balance (HLS)");
+            var lightness = effect.property("ADBE Color Balance (HLS)-0002");
+
+            lightness.setValueAtTime(tStart, 0);
+            lightness.setValueAtTime(t,      100);
+        }
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 
@@ -4499,32 +4685,39 @@ function smoothLinearWipe() {
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
 
-    app.beginUndoGroup("Quick Tool: smoothLinearWipe");
-
     var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("No layers selected."); return; }
+
     var t = comp.time;
 
-    for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
-        var effect = layer.Effects.addProperty("ADBE Linear Wipe");
+    app.beginUndoGroup("Quick Tool: smoothLinearWipe");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
 
-        // Static properties
-        effect.property("ADBE Linear Wipe-0002").setValue(-90);  // Wipe Angle
-        effect.property("ADBE Linear Wipe-0003").setValue(100);  // Feather
+            qtTrimIn(layer, t);
 
-        // Transition Completion: 100 → 0 with keyframes
-        var transition = effect.property("ADBE Linear Wipe-0001");
-        transition.setValueAtTime(t,       100);
-        transition.setValueAtTime(t + 0.5, 0);
+            var effect = layer.Effects.addProperty("ADBE Linear Wipe");
 
-        var easeIn  = new KeyframeEase(0, 33);
-        var easeOut = new KeyframeEase(0, 33);
+            // Static properties
+            effect.property("ADBE Linear Wipe-0002").setValue(-90);  // Wipe Angle
+            effect.property("ADBE Linear Wipe-0003").setValue(100);  // Feather
 
-        transition.setTemporalEaseAtKey(1, [easeIn],  [easeOut]);
-        transition.setTemporalEaseAtKey(2, [easeIn],  [easeOut]);
+            // Transition Completion: 100 → 0 with keyframes
+            var transition = effect.property("ADBE Linear Wipe-0001");
+            transition.setValueAtTime(t,       100);
+            transition.setValueAtTime(t + 0.5, 0);
+
+            var easeIn  = new KeyframeEase(0, 33);
+            var easeOut = new KeyframeEase(0, 33);
+
+            transition.setTemporalEaseAtKey(1, [easeIn],  [easeOut]);
+            transition.setTemporalEaseAtKey(2, [easeIn],  [easeOut]);
+        }
+    } finally {
+        app.endUndoGroup();
     }
-
-    app.endUndoGroup();
 }
 
 
@@ -4543,8 +4736,8 @@ function darkenFootage() {
 
     for (var i = 0; i < layers.length; i++) {
         var layer = layers[i];
-        var effect = layer.Effects.addProperty("Brightness & Contrast");
-        effect.property("Brightness").setValue(-50);
+        var effect = layer.Effects.addProperty("ADBE Brightness & Contrast 2");
+        effect.property("ADBE Brightness & Contrast 2-0001").setValue(-50);
     }
 
     app.endUndoGroup();
@@ -4587,16 +4780,26 @@ function audioFadeOut() {
 // ─────────────────────────────────────────────────────────────
 // layerSearch
 //    Opens a search window. Matches layer names by substring.
-//    Select First: selects first match, reveals modified props, closes.
+//    Search:       Find Next. Selects the next matching layer below the current
+//                  selection, wrapping to the top. With nothing selected, picks the
+//                  topmost match. Reveals modified props on the match and collapses
+//                  the reveal on the previously revealed layer. Window stays open.
 //    Select All:   selects all matches, closes.
-//    Search in Sub: searches inside a single selected precomp recursively.
+//    Search in selected Subcomp: searches inside a single selected precomp recursively.
 //    Close: dismisses the window.
 // ─────────────────────────────────────────────────────────────
 function layerSearch() {
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
 
+    // ── Collapse command: "Reveal Expression Errors" ─────────
+    // With no expression errors present, it collapses the layer's revealed properties.
+    // Looked up by name so it survives AE version changes; 2731 is the fallback.
+    var collapseCmd = app.findMenuCommandId("Reveal Expression Errors");
+    if (collapseCmd === 0) { collapseCmd = 2731; }
+
     // ── Helper: find layers matching query in a given comp ──
+    // Returns layers in ascending index order (topmost first)
     function findMatches(targetComp, query) {
         var matches = [];
         var q = query.toLowerCase();
@@ -4644,10 +4847,13 @@ function layerSearch() {
     btnGroup.alignChildren = ["fill", "center"];
     btnGroup.spacing = 6;
 
-    var btnFirst  = btnGroup.add("button", undefined, "Select First");
+    var btnFirst  = btnGroup.add("button", undefined, "Search");
     var btnAll    = btnGroup.add("button", undefined, "Select All");
-    var btnSub    = btnGroup.add("button", undefined, "Search in Sub");
+    var btnSub    = btnGroup.add("button", undefined, "Search in selected Subcomp");
     var btnClose  = btnGroup.add("button", undefined, "Close");
+
+    // Index of the layer whose properties the last Search press revealed (0 = none)
+    var revealedIndex = 0;
 
     // ── Actions ──────────────────────────────────────────────
     btnFirst.onClick = function () {
@@ -4660,17 +4866,43 @@ function layerSearch() {
             return;
         }
 
-        // Deselect all, select first match
+        // Cursor = lowest selected layer (highest index). 0 if nothing is selected.
+        var cursor = 0;
+        var sel = comp.selectedLayers;
+        for (var s = 0; s < sel.length; s++) {
+            if (sel[s].index > cursor) { cursor = sel[s].index; }
+        }
+
+        // Next match below the cursor; wrap to the topmost match if none is left.
+        // With no selection (cursor = 0), this picks the topmost match.
+        var target = matches[0];
+        for (var m = 0; m < matches.length; m++) {
+            if (matches[m].index > cursor) {
+                target = matches[m];
+                break;
+            }
+        }
+
+        // Collapse the reveal on the layer we revealed last time (only if it's
+        // still the sole selected layer), so the timeline doesn't keep growing.
+        // Note: if that layer has a real expression error, this would show it
+        // instead of collapsing.
+        if (revealedIndex > 0 && sel.length === 1 && sel[0].index === revealedIndex) {
+            app.executeCommand(collapseCmd);
+        }
+
+        // Deselect all, select the target
         for (var i = 1; i <= comp.numLayers; i++) {
             comp.layer(i).selected = false;
         }
-        matches[0].selected = true;
+        target.selected = true;
 
         // Reveal modified properties (equivalent to pressing U twice)
         app.executeCommand(2797); // U  — keyframed properties
         app.executeCommand(2797); // UU — all modified properties
+        revealedIndex = target.index;
 
-        win.close();
+        // No win.close(): the window stays open for the next press
     };
 
     btnAll.onClick = function () {
@@ -4700,7 +4932,7 @@ function layerSearch() {
 
         var selected = comp.selectedLayers;
         if (selected.length !== 1) {
-            alert("Please select exactly 1 precomp layer before using Search in Sub.");
+            alert("Please select exactly 1 precomp layer before using Search in selected Subcomp.");
             return;
         }
 
@@ -4730,7 +4962,7 @@ function layerSearch() {
         win.close();
     };
 
-    // Allow Enter key to trigger Select First
+    // Allow Enter key to trigger Search (Find Next)
     searchBox.addEventListener("keydown", function (e) {
         if (e.keyName === "Enter") { btnFirst.notify("onClick"); }
     });
@@ -4757,8 +4989,8 @@ function lightenFootage() {
 
     for (var i = 0; i < layers.length; i++) {
         var layer = layers[i];
-        var effect = layer.Effects.addProperty("Brightness & Contrast");
-        effect.property("Brightness").setValue(50);
+        var effect = layer.Effects.addProperty("ADBE Brightness & Contrast 2");
+        effect.property("ADBE Brightness & Contrast 2-0001").setValue(50);
     }
 
     app.endUndoGroup();
@@ -5989,6 +6221,133 @@ function gameWinText() {
     app.endUndoGroup();
     comp_C1.openInViewer();
     alert("RECREATED FROM LATEST DUMP WITH REAL TARGET + SHARED MATTE WORKAROUND\n\nDepth 4 RSC2 Linear Wipe\nDepth 3 PC1 10 layers\nDepth 2 PC2 5 layers\nDepth 1 RSC1: 11 layers - 5x PC2 matte copies + 5 solids ALPHA matted by PC2 + 1 visible PC2\nDepth 0 Comp1 GAME WIN!\n\nAll A-E now matted by Pre-comp 2 but Pre-comp 2 stays visible");
+}
+
+function animeSpeedLines() {
+    var COMP_NAME = "Anime Speed Lines";
+    var active = app.project.activeItem;
+    if (!(active instanceof CompItem)) { alert("Open a comp first."); return; }
+    if (active.name === COMP_NAME) { alert("Switch to the comp you want to add the speed lines to."); return; }
+
+    app.beginUndoGroup("Add Anime Speed Lines");
+
+    // Find existing comp by name
+    var slComp = null;
+    var createdFresh = false;
+    for (var i = 1; i <= app.project.numItems; i++) {
+        var it = app.project.item(i);
+        if (it instanceof CompItem && it.name === COMP_NAME) { slComp = it; break; }
+    }
+
+    // Build it only if it doesn't exist yet
+    if (!slComp) {
+        createdFresh = true;
+        slComp = app.project.items.addComp(COMP_NAME, active.width, active.height,
+            active.pixelAspect, active.duration, active.frameRate);
+
+        var COPIES = 24;
+        var HOLE = 550;        // default hole size (slider)
+        var LEN_MIN = 600;     // spike length range
+        var LEN_MAX = 1200;
+        var EXTRA_MAX = 150;   // random extra distance from center, per spike
+        var JITTER = 5;        // angle jitter in degrees
+        var WIDTH = 30;
+        var WIG_POS = [100, 0]; // Wiggle Transform position amount (x only)
+        var WIG_ROT = 9;        // Wiggle Transform rotation amount (degrees)
+
+        var layer = slComp.layers.addShape();
+        layer.name = "Speed Lines";
+        layer.position.setValue([slComp.width / 2, slComp.height / 2]);
+
+        var hole = layer.property("ADBE Effect Parade").addProperty("ADBE Slider Control");
+        hole.name = "Hole Size";
+        hole.property(1).setValue(HOLE);
+
+        var contents = layer.property("ADBE Root Vectors Group");
+
+        for (var k = 0; k < COPIES; k++) {
+            var len = LEN_MIN + Math.random() * (LEN_MAX - LEN_MIN);
+            var extra = Math.random() * EXTRA_MAX;
+            var angle = k * 360 / COPIES + (Math.random() * 2 - 1) * JITTER;
+
+            // One group per spike: rotation sets the angle, pivot stays at layer center
+            var group = contents.addProperty("ADBE Vector Group");
+            group.name = "Spike " + (k + 1);
+            group.property("ADBE Vector Transform Group")
+                 .property("ADBE Vector Rotation").setValue(angle);
+            var gc = group.property("ADBE Vectors Group");
+
+            // Path with the distance built in, so the path origin is the hole center
+            var path = gc.addProperty("ADBE Vector Shape - Group");
+            path.property("ADBE Vector Shape").expression =
+                'var d = effect("Hole Size")(1) + ' + extra.toFixed(2) + ';\n' +
+                'var len = ' + len.toFixed(2) + ';\n' +
+                'var w = ' + WIDTH + ';\n' +
+                'createPath([[d + len, -w / 2], [d + len, w / 2], [d, 0]],\n' +
+                '           [[0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0]], true);';
+
+            var fill = gc.addProperty("ADBE Vector Graphic - Fill");
+            fill.property("ADBE Vector Fill Color").setValue([1, 1, 1]);
+        }
+
+        // Wiggle Transform, added last so it affects every spike group above it
+        var wig = contents.addProperty("ADBE Vector Filter - Wiggler");
+        wig.property("ADBE Vector Xform Temporal Freq").setValue(0);
+
+        var wt = wig.property("ADBE Vector Wiggler Transform");
+        wt.property("ADBE Vector Wiggler Position").setValue(WIG_POS);
+        wt.property("ADBE Vector Wiggler Rotation").setValue(WIG_ROT);
+
+        // Random Seed: 1 to 24 over 24 frames, looped
+        var seed = wig.property("ADBE Vector Random Seed");
+        seed.setValueAtTime(0, 1);
+        seed.setValueAtTime(23 * slComp.frameDuration, 24);
+        seed.expression = 'loopOut("cycle")';
+    }
+
+    // Capture the topmost selected layer before adding anything
+    var sel = active.selectedLayers;
+    var topSel = null;
+    for (var j = 0; j < sel.length; j++) {
+        if (!topSel || sel[j].index < topSel.index) topSel = sel[j];
+    }
+
+    var newLayer = active.layers.add(slComp);
+    if (topSel) {
+        newLayer.moveBefore(topSel);   // directly above the selected layer
+    } else {
+        newLayer.moveToBeginning();    // top of the stack
+    }
+
+    app.endUndoGroup();
+
+    if (createdFresh) {
+        alert("Anime Speed Lines added successfully.\n\nTo change the hole size, open the \"Anime Speed Lines\" comp and adjust the Hole Size slider in the Speed Lines layer's Effects.");
+    }
+}
+
+function buildStarterTemplate() {
+    app.beginUndoGroup("Build Starter Template");
+
+    var proj = app.project;
+
+    // Folders
+    var folderNames = ["AUDIO MUSIC", "AUDIO SFX", "VIDEO FOOTAGE", "VIDEO EFFECTS", "IMAGES"];
+    for (var i = 0; i < folderNames.length; i++) {
+        proj.items.addFolder(folderNames[i]);
+    }
+
+    // Comp: name, width, height, pixel aspect, duration (sec), fps
+    var comp = proj.items.addComp("Starter Comp", 1920, 1080, 1, 30, 24);
+
+    // Black solid
+    var bg = comp.layers.addSolid([0, 0, 0], "Black Background", 1920, 1080, 1, comp.duration);
+    bg.name = "Black Background";
+
+    // Open comp as the active comp (runs last)
+    comp.openInViewer();
+
+    app.endUndoGroup();
 }
 
 
