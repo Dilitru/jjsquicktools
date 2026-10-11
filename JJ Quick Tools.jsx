@@ -212,6 +212,10 @@ function JJQuickTools(thisObj) {
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
         {category:"Layer Management", name:"Create Template (Project)"},
+        {category:"Layer Management", name:"Loop Out (Cycle)"},
+        {category:"Layer Management", name:"Loop Out (Ping Pong)"},
+        {category:"Layer Management", name:"Loop Out (Offset)"},
+        {category:"Layer Management", name:"Loop Out (Continue)"},
         {category:"Timeline Management", name:"Loop Maker"},
         {category:"Audio Management", name:"BGM Compressor"},
         {category:"Collage Maker", name:"Sphere Collage (20)"},
@@ -383,6 +387,18 @@ function JJQuickTools(thisObj) {
 			break;
 			case "Create Template (Project)":
 				buildStarterTemplate();
+			break;
+			case "Loop Out (Cycle)":
+				loopOutApply("cycle");
+			break;
+			case "Loop Out (Ping Pong)":
+				loopOutApply("pingpong");
+			break;
+			case "Loop Out (Offset)":
+				loopOutApply("offset");
+			break;
+			case "Loop Out (Continue)":
+				loopOutApply("continue");
 			break;
 			case "Loop Maker":
 				loopMaker();
@@ -1020,8 +1036,8 @@ function quickLightSweep() {
 
         // Animate Center from left to right in 3 seconds
         var startTime = mainComp.time;
-        centerProp.setValueAtTime(startTime, [-100, yCenter]);
-        centerProp.setValueAtTime(startTime + 3, [layerWidth + 100, yCenter]);
+        centerProp.setValueAtTime(startTime, [-400, yCenter]);
+        centerProp.setValueAtTime(startTime + 3, [layerWidth * 1.4, yCenter]);
 
         // Set Sweep Intensity to 100
         intensityProp.setValue(100);
@@ -4994,6 +5010,90 @@ function lightenFootage() {
     }
 
     app.endUndoGroup();
+}
+
+// ─────────────────────────────────────────────────────────────
+// loopOutApply
+//    type: "cycle" | "pingpong" | "offset" | "continue"
+//    1. Selected keyframed properties: apply loopOut(type).
+//    2. No properties selected: enable Time Remap on selected
+//       layers and apply loopOut(type) to it.
+//    3. Same as 2 for a comp layer, but when Time Remap is freshly
+//       enabled, first key the frame before the final keyframe and
+//       delete the final keyframe (it lands on a blank frame).
+// ─────────────────────────────────────────────────────────────
+function loopOutApply(type) {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
+
+    var expr = 'loopOut("' + type + '")';
+    var applied = 0;
+    var skipped = 0;
+
+    // Collect selected leaf properties (ignore groups / no-value props)
+    var selProps = comp.selectedProperties;
+    var targets = [];
+    for (var p = 0; p < selProps.length; p++) {
+        var sp = selProps[p];
+        if (sp.propertyType != PropertyType.PROPERTY) continue;
+        if (sp.propertyValueType == PropertyValueType.NO_VALUE) continue;
+        targets.push(sp);
+    }
+
+    app.beginUndoGroup("Quick Tool: Loop Out (" + type + ")");
+    try {
+        if (targets.length > 0) {
+            // 1) Selected properties
+            for (var i = 0; i < targets.length; i++) {
+                var prop = targets[i];
+                if (prop.canSetExpression && prop.numKeys >= 2) {
+                    prop.expression = expr;
+                    applied++;
+                } else {
+                    skipped++;
+                }
+            }
+        } else {
+            // 2 / 3) Time Remap on selected layers
+            var layers = comp.selectedLayers;
+            if (layers.length === 0) {
+                alert("Select keyframed properties or a layer.");
+            }
+            for (var j = 0; j < layers.length; j++) {
+                var layer = layers[j];
+                if (!layer.canSetTimeRemapEnabled) { skipped++; continue; }
+
+                var freshlyEnabled = false;
+                if (!layer.timeRemapEnabled) {
+                    layer.timeRemapEnabled = true;
+                    freshlyEnabled = true;
+                }
+                var tr = layer.property("ADBE Time Remapping");
+
+                // Comp layer: key the frame before the final key, then drop the final key
+                if (freshlyEnabled && (layer.source instanceof CompItem) && tr.numKeys >= 2) {
+                    var lastIdx = tr.numKeys;
+                    var newTime = tr.keyTime(lastIdx) - comp.frameDuration;
+                    if (newTime > tr.keyTime(lastIdx - 1)) {
+                        var v = tr.valueAtTime(newTime, false);
+                        tr.setValueAtTime(newTime, v);
+                        tr.removeKey(tr.numKeys); // final keyframe
+                    }
+                }
+
+                tr.expression = expr;
+                applied++;
+            }
+        }
+    } catch (e) {
+        alert("Loop Out error: " + e.toString());
+    } finally {
+        app.endUndoGroup();
+    }
+
+    if (applied === 0 && skipped > 0) {
+        alert("Nothing applied. Properties need 2+ keyframes, and layers must support Time Remap.");
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
