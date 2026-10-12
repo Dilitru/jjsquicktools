@@ -173,33 +173,39 @@ function JJQuickTools(thisObj) {
         {category:"Animate In", name:"Slide in from Random"},
 		{category:"Animate In", name:"Smooth Linear Wipe"},
         {category:"Animate In", name:"Card In"},
+        {category:"Animate In", name:"Spin In"},
+        {category:"Animate In", name:"Badge In"},
         {category:"Animate Out", name:"Fade Out"},
         {category:"Animate Out", name:"Scale Out"},
 		{category:"Animate Out", name:"Fade To Black"},
 		{category:"Animate Out", name:"Fade To White"},
         {category:"Emphasis", name:"Quick Light Sweep"},
+        {category:"Emphasis", name:"Slow Light Sweep"},
         {category:"Emphasis", name:"Pulse Scale"},
 		{category:"Emphasis", name:"Grow Over Time"},
 		{category:"Emphasis", name:"Glow (Quick)"},
 		{category:"Emphasis", name:"Glow (Intense)"},
+		{category:"Emphasis", name:"Pulsing Loop"},
         {category:"Color Control", name:"Saturation to 0"},
 		{category:"Color Control", name:"Desaturate Footage"},
 		{category:"Color Control", name:"Darken Footage"},
 		{category:"Color Control", name:"Lighten Footage"},
 		{category:"Audio Control", name:"Audio Fade Out"},
-        {category:"Text Tools", name:"Text with Violator"},
-		{category:"Text Tools", name:"Text with Violator (Use Comp Name)"},
-        {category:"Text Tools", name:"Stylish Text In"},
-        {category:"Text Tools", name:"Unscatter"},
-        {category:"Text Tools", name:"Dark Souls Text"},
-        {category:"Text Tools", name:"Tracking In"},
-        {category:"Text Tools", name:"Game Win Text"},
+        {category:"Text Comps", name:"Text with Violator"},
+        {category:"Text Comps", name:"Text with Violator (Use Comp Name)"},
+        {category:"Text Comps", name:"Dark Souls Text"},
+        {category:"Text Comps", name:"Game Win Text"},
+        {category:"Text Comps", name:"Echo Text"},
+        {category:"Text Effects", name:"Stylish Text In"},
+        {category:"Text Effects", name:"Unscatter"},
+        {category:"Text Effects", name:"Tracking In"},
         {category:"Transitions", name:"Lens Distort Transition"},
         {category:"Transitions", name:"Lens Flare Transition"},
         {category:"Transitions", name:"Offset Transition"},
         {category:"Transitions", name:"Rotation Transition"},
         {category:"Transitions", name:"Zoom Transition"},
         {category:"Transitions", name:"Hexagon Transition"},
+        {category:"Transitions", name:"Glitch Transition"},
         {category:"Effects", name:"Lens Flare Horizontal"},
         {category:"Effects", name:"Radial Flare"},
         {category:"Effects", name:"Motion Blur Bloom"},
@@ -209,6 +215,9 @@ function JJQuickTools(thisObj) {
         {category:"Effects", name:"Rainbow Refraction"},
         {category:"Effects", name:"Chromatic Abberation"},
         {category:"Effects", name:"Anime Speed Lines"},
+        {category:"Effects", name:"Flower Particles"},
+        {category:"Effects", name:"Film Grunge"},
+        {category:"Effects", name:"Bokeh Background"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
         {category:"Layer Management", name:"Create Template (Project)"},
@@ -232,7 +241,7 @@ function JJQuickTools(thisObj) {
 		{category:"Automation", name:"seeLayers"},
 		{category:"Automation", name:"runAutomation"},
 		{category:"Automation", name:"runJSXFile"},
-		{category:"Version", name:"Version 101226-1000"},
+		{category:"Version", name:"Version 101226-1752"},
 
 
     ];
@@ -376,8 +385,20 @@ function JJQuickTools(thisObj) {
 			case "Anime Speed Lines":
 			    animeSpeedLines();
 		    break;
+			case "Flower Particles":
+			    flowerParticles();
+		    break;
+			case "Film Grunge":
+			    filmGrunge();
+		    break;
+			case "Bokeh Background":
+			    bokehBackground();
+		    break;
 			case "Quick Light Sweep":
 			    quickLightSweep();
+		    break;
+			case "Slow Light Sweep":
+			    slowLightSweep();
 		    break;
 			case "True Layer Duplicator":
 				trueLayerDuplicatorClone();
@@ -469,6 +490,12 @@ function JJQuickTools(thisObj) {
 			case "Card In":
 				CardIn();
 			break;
+			case "Spin In":
+				animateSpinIn();
+			break;
+			case "Badge In":
+				badgeIn();
+			break;
 			case "runJSXFile":
 				runJSXFile("oneOffScript.jsx");
 			break;
@@ -499,6 +526,12 @@ function JJQuickTools(thisObj) {
 			case "Glow (Intense)":
 				IntenseGlow();
 				break;
+			case "Echo Text":
+				echoText();
+			break;
+			case "Pulsing Loop":
+				pulsingLoop();
+				break;
 			case "Desaturate Footage":
 				desaturateFootage();
 				break;
@@ -510,6 +543,9 @@ function JJQuickTools(thisObj) {
 				break;
 			case "Hexagon Transition":
 				hexagonTransition();
+				break;
+			case "Glitch Transition":
+				glitchTransition();
 				break;
 			case "Unscatter":
 				SpinIn();
@@ -1045,6 +1081,56 @@ function quickLightSweep() {
         app.endUndoGroup();
 }
 
+function slowLightSweep() {
+        app.beginUndoGroup("CC Light Sweep Slow Tool");
+
+        var mainComp = app.project.activeItem;
+        if (!(mainComp && mainComp instanceof CompItem)) {
+            alert("Please select a layer in a comp.");
+            return;
+        }
+
+        var selLayers = mainComp.selectedLayers;
+        if (selLayers.length === 0) {
+            alert("Select a layer first.");
+            return;
+        }
+
+        var targetLayer = selLayers[0];
+
+        // Add CC Light Sweep effect directly to the selected layer
+        var sweepEffect = targetLayer.property("Effects").addProperty("CC Light Sweep");
+
+        if (!sweepEffect) {
+            alert("Could not add CC Light Sweep effect.");
+            return;
+        }
+
+        // Access properties
+        var centerProp = sweepEffect.property("Center");
+        var intensityProp = sweepEffect.property("Sweep Intensity");
+
+        if (!centerProp || !intensityProp) {
+            alert("Could not access CC Light Sweep properties.");
+            return;
+        }
+
+        // Calculate layer bounds
+        var layerWidth = targetLayer.width;
+        var layerHeight = targetLayer.height;
+        var yCenter = layerHeight / 2;
+
+        // Animate Center from left to right in 6 seconds
+        var startTime = mainComp.time;
+        centerProp.setValueAtTime(startTime, [-400, yCenter]);
+        centerProp.setValueAtTime(startTime + 6, [layerWidth * 1.4, yCenter]);
+
+        // Set Sweep Intensity to 100
+        intensityProp.setValue(100);
+
+        app.endUndoGroup();
+}
+
 function trueLayerDuplicatorClone() {
     app.beginUndoGroup("True Layer Duplicator Clone");
 
@@ -1263,6 +1349,27 @@ function scaleIn() {
             scale.setTemporalEaseAtKey(k1, easeOutArray, easeOutArray);
             scale.setTemporalEaseAtKey(k2, easeInArray, easeInArray);
         }
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// badgeIn   (menu: "Badge In")
+//    Scale In + Quick Light Sweep in one click, as a single undo step.
+//    Calls the existing scaleIn() and quickLightSweep() so it stays in
+//    sync with any tweaks to either. Note: Scale In applies to all
+//    selected layers; the light sweep applies to the first selected layer.
+// ─────────────────────────────────────────────────────────────
+function badgeIn() {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+    if (comp.selectedLayers.length === 0) { alert("Select a layer first."); return; }
+
+    app.beginUndoGroup("Badge In Quick Tool");
+    try {
+        scaleIn();
+        quickLightSweep();
     } finally {
         app.endUndoGroup();
     }
@@ -4542,6 +4649,477 @@ function scaleInBounce() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// echoText
+//    One-click Echo Text. Builds "echo_base_text", "echo_lines" and
+//    "Echo Text" comps once (asks for the text), then adds "Echo Text"
+//    to the active comp above the topmost selected layer.
+// ─────────────────────────────────────────────────────────────
+function echoFindComp(name) {
+    for (var i = 1; i <= app.project.numItems; i++) {
+        var it = app.project.items[i];
+        if (it instanceof CompItem && it.name === name) return it;
+    }
+    return null;
+}
+
+// mode: "fill"   -> white fill, no stroke
+//       "stroke" -> no fill, white 2px stroke
+// txt: string to set (null = keep existing text)
+// applyFont: true only when first building the layer
+function styleEchoText(layer, mode, txt, applyFont) {
+    var prop = layer.property("ADBE Text Properties").property("ADBE Text Document");
+    var td = prop.value;
+    if (txt !== null && txt !== undefined) td.text = txt;
+
+    if (applyFont) {
+        try { td.font = "Orbitron-Black"; } catch(e) {}
+        try { td.fontSize = 150; } catch(e) {}
+        try { td.tracking = 74; } catch(e) {}
+        try { td.leading = 180; } catch(e) {}
+        try { td.justification = ParagraphJustification.CENTER_JUSTIFY; } catch(e) {}
+    }
+
+    if (mode === "fill") {
+        td.applyStroke = false;
+        td.applyFill = true;
+        td.fillColor = [1, 1, 1];
+    } else {
+        td.applyFill = false;
+        td.applyStroke = true;
+        td.strokeColor = [1, 1, 1];
+        td.strokeWidth = 2;
+        td.strokeOverFill = false;
+    }
+    prop.setValue(td);
+    try { prop.expression = ""; } catch(e) {}
+}
+
+function buildEchoComps(txt) {
+    // --- echo_base_text ---
+    var compBase = app.project.items.addComp("echo_base_text", 1920, 1080, 1, 30, 24);
+    compBase.bgColor = [0,0,0];
+    var lBase = compBase.layers.addText(txt);
+    lBase.name = "base_text";
+    lBase.label = 1;
+    lBase.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([0.518, -92.957, 0]);
+    lBase.property("ADBE Transform Group").property("ADBE Position").setValue([960, 540, 0]);
+    lBase.property("ADBE Transform Group").property("ADBE Scale").setValue([100,100,100]);
+    lBase.property("ADBE Transform Group").property("ADBE Opacity").setValue(100);
+    lBase.startTime = 0; lBase.inPoint = 0; lBase.outPoint = 30.875;
+    styleEchoText(lBase, "fill", txt, true);
+
+    // --- echo_lines ---
+    var compLines = app.project.items.addComp("echo_lines", 1920, 1080, 1, 30, 24);
+    compLines.bgColor = [0,0,0];
+    var lExtract = compLines.layers.addText(txt);
+    lExtract.name = "base_text_extract";
+    lExtract.label = 1;
+    lExtract.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([0.518, -92.957, 0]);
+    lExtract.property("ADBE Transform Group").property("ADBE Position").setValue([960, 540, 0]);
+    lExtract.startTime = 0; lExtract.inPoint = 0; lExtract.outPoint = 1.125;
+
+    var scaleProp = lExtract.property("ADBE Transform Group").property("ADBE Scale");
+    scaleProp.setValueAtTime(0, [100,100,100]);
+    scaleProp.setValueAtTime(0.5, [120,120,100]);
+    try {
+        scaleProp.setInterpolationTypeAtKey(1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+        scaleProp.setInterpolationTypeAtKey(2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+        var in30 = new KeyframeEase(0, 30); var out30 = new KeyframeEase(0, 30);
+        var in100 = new KeyframeEase(0, 100); var out100 = new KeyframeEase(0, 100);
+        scaleProp.setTemporalEaseAtKey(1, [in30,in30,in30], [out30,out30,out30]);
+        scaleProp.setTemporalEaseAtKey(2, [in100,in100,in100], [out100,out100,out100]);
+    } catch(e) {}
+
+    var opProp = lExtract.property("ADBE Transform Group").property("ADBE Opacity");
+    opProp.setValueAtTime(0.417, 100);
+    opProp.setValueAtTime(0.792, 0);
+
+    styleEchoText(lExtract, "stroke", txt, true);
+
+    try {
+        var fx1 = lExtract.property("ADBE Effect Parade").addProperty("ADBE Glo2");
+        fx1.name = "Glow Inner Halo";
+        fx1.property("ADBE Glo2-0002").setValue(127);
+        fx1.property("ADBE Glo2-0003").setValue(50);
+        fx1.property("ADBE Glo2-0004").setValue(3);
+        fx1.property("ADBE Glo2-0005").setValue(1);
+        var fx2 = lExtract.property("ADBE Effect Parade").addProperty("ADBE Glo2");
+        fx2.name = "Glow Outer Halo";
+        fx2.property("ADBE Glo2-0002").setValue(255);
+        fx2.property("ADBE Glo2-0003").setValue(100);
+        fx2.property("ADBE Glo2-0004").setValue(2);
+        fx2.property("ADBE Glo2-0005").setValue(1);
+    } catch(e) {}
+
+    // --- Echo Text ---
+    var compMain = app.project.items.addComp("Echo Text", 1920, 1080, 1, 30, 24);
+    compMain.bgColor = [0,0,0];
+
+    var layerBaseComp = compMain.layers.add(compBase);
+    layerBaseComp.name = "echo_base_text";
+    layerBaseComp.label = 15;
+    layerBaseComp.startTime = 0; layerBaseComp.inPoint = 0; layerBaseComp.outPoint = 30;
+    layerBaseComp.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([960,540,0]);
+    layerBaseComp.property("ADBE Transform Group").property("ADBE Position").setValue([960,540,0]);
+    try { layerBaseComp.timeRemapEnabled = true; } catch(e) {}
+    var sPropBase = layerBaseComp.property("ADBE Transform Group").property("ADBE Scale");
+    sPropBase.setValueAtTime(0, [0,0,100]);
+    sPropBase.setValueAtTime(0.5, [100,100,100]);
+    try {
+        sPropBase.setInterpolationTypeAtKey(1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+        sPropBase.setInterpolationTypeAtKey(2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+        var in30b = new KeyframeEase(0, 30); var out30b = new KeyframeEase(0, 30);
+        var in100b = new KeyframeEase(0, 100); var out100b = new KeyframeEase(0, 100);
+        sPropBase.setTemporalEaseAtKey(1, [in30b,in30b,in30b], [out30b,out30b,out30b]);
+        sPropBase.setTemporalEaseAtKey(2, [in100b,in100b,in100b], [out100b,out100b,out100b]);
+    } catch(e) {}
+
+    var layerLinesComp = compMain.layers.add(compLines);
+    layerLinesComp.name = "echo_lines";
+    layerLinesComp.label = 15;
+    layerLinesComp.startTime = 0.375; layerLinesComp.inPoint = 0.375; layerLinesComp.outPoint = 30.375;
+    layerLinesComp.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([960,540,0]);
+    layerLinesComp.property("ADBE Transform Group").property("ADBE Position").setValue([960,540,0]);
+    layerLinesComp.property("ADBE Transform Group").property("ADBE Scale").setValue([100,100,100]);
+    try { layerLinesComp.timeRemapEnabled = true; } catch(e) {}
+    try {
+        var echoFx = layerLinesComp.property("ADBE Effect Parade").addProperty("ADBE Echo");
+        echoFx.property("ADBE Echo-0001").setValue(-0.08);
+        echoFx.property("ADBE Echo-0002").setValue(5);
+    } catch(e) {}
+
+    return compMain;
+}
+
+function repairExistingStyles() {
+    var cb = echoFindComp("echo_base_text");
+    if (cb !== null) {
+        for (var i = 1; i <= cb.numLayers; i++) {
+            if (cb.layer(i).name === "base_text") {
+                try { styleEchoText(cb.layer(i), "fill", null, false); } catch(e) {}
+            }
+        }
+    }
+    var cl = echoFindComp("echo_lines");
+    if (cl !== null) {
+        for (var j = 1; j <= cl.numLayers; j++) {
+            if (cl.layer(j).name === "base_text_extract") {
+                try { styleEchoText(cl.layer(j), "stroke", null, false); } catch(e) {}
+            }
+        }
+    }
+}
+
+// Center anchor in layer content, then center layer in the comp view.
+// Menu commands need the comp open in the viewer with only this layer selected.
+function centerTextLayer(comp, layer) {
+    comp.openInViewer();
+    comp.time = 0;
+    for (var i = 1; i <= comp.numLayers; i++) comp.layer(i).selected = false;
+    layer.selected = true;
+
+    var idAnchor = app.findMenuCommandId("Center Anchor Point in Layer Content");
+    var idView   = app.findMenuCommandId("Center in View");
+
+    if (idAnchor && idView) {
+        app.executeCommand(idAnchor);
+        app.executeCommand(idView);
+    } else {
+        // fallback if the menu names aren't found (e.g. non-English AE)
+        var r = layer.sourceRectAtTime(0, true);
+        layer.property("ADBE Transform Group").property("ADBE Anchor Point")
+             .setValue([r.left + r.width / 2, r.top + r.height / 2]);
+        layer.property("ADBE Transform Group").property("ADBE Position")
+             .setValue([comp.width / 2, comp.height / 2]);
+    }
+}
+
+function centerEchoTexts() {
+    var cb = echoFindComp("echo_base_text");
+    var cl = echoFindComp("echo_lines");
+    var i;
+    if (cb !== null) for (i = 1; i <= cb.numLayers; i++)
+        if (cb.layer(i).name === "base_text") centerTextLayer(cb, cb.layer(i));
+    if (cl !== null) for (i = 1; i <= cl.numLayers; i++)
+        if (cl.layer(i).name === "base_text_extract") centerTextLayer(cl, cl.layer(i));
+}
+
+function echoText() {
+    app.beginUndoGroup("echoText");
+    var activeComp = app.project.activeItem;
+    if (!(activeComp instanceof CompItem)) {
+        alert("Please select a comp to add Echo Text to.");
+        app.endUndoGroup(); return;
+    }
+
+    try { repairExistingStyles(); } catch(e) {}
+
+    var echoComp = echoFindComp("Echo Text");
+    if (echoComp === null) {
+        var txt = prompt("Enter the text for Echo Text:", "AMPLIFIED", "Echo Text");
+        if (txt === null || txt === "") { app.endUndoGroup(); return; }   // cancelled
+
+        var compBaseExisting = echoFindComp("echo_base_text");
+        var compLinesExisting = echoFindComp("echo_lines");
+        if (compBaseExisting !== null && compLinesExisting !== null) {
+            // apply the new text to the existing precomps
+            for (var a = 1; a <= compBaseExisting.numLayers; a++) {
+                if (compBaseExisting.layer(a).name === "base_text")
+                    styleEchoText(compBaseExisting.layer(a), "fill", txt, false);
+            }
+            for (var b = 1; b <= compLinesExisting.numLayers; b++) {
+                if (compLinesExisting.layer(b).name === "base_text_extract")
+                    styleEchoText(compLinesExisting.layer(b), "stroke", txt, false);
+            }
+
+            var compMainOnly = app.project.items.addComp("Echo Text", 1920, 1080, 1, 30, 24);
+            compMainOnly.bgColor = [0,0,0];
+            var lBaseOnly = compMainOnly.layers.add(compBaseExisting);
+            lBaseOnly.name = "echo_base_text"; lBaseOnly.label = 15;
+            lBaseOnly.startTime = 0; lBaseOnly.inPoint = 0; lBaseOnly.outPoint = 30;
+            lBaseOnly.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([960,540,0]);
+            lBaseOnly.property("ADBE Transform Group").property("ADBE Position").setValue([960,540,0]);
+            try { lBaseOnly.timeRemapEnabled = true; } catch(e) {}
+            var sB = lBaseOnly.property("ADBE Transform Group").property("ADBE Scale");
+            sB.setValueAtTime(0, [0,0,100]); sB.setValueAtTime(0.5, [100,100,100]);
+            try {
+                sB.setInterpolationTypeAtKey(1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+                sB.setInterpolationTypeAtKey(2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+                var in30c = new KeyframeEase(0, 30); var out30c = new KeyframeEase(0, 30);
+                var in100c = new KeyframeEase(0, 100); var out100c = new KeyframeEase(0, 100);
+                sB.setTemporalEaseAtKey(1, [in30c,in30c,in30c], [out30c,out30c,out30c]);
+                sB.setTemporalEaseAtKey(2, [in100c,in100c,in100c], [out100c,out100c,out100c]);
+            } catch(e) {}
+            var lLinesOnly = compMainOnly.layers.add(compLinesExisting);
+            lLinesOnly.name = "echo_lines"; lLinesOnly.label = 15;
+            lLinesOnly.startTime = 0.375; lLinesOnly.inPoint = 0.375; lLinesOnly.outPoint = 30.375;
+            lLinesOnly.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([960,540,0]);
+            lLinesOnly.property("ADBE Transform Group").property("ADBE Position").setValue([960,540,0]);
+            try { lLinesOnly.timeRemapEnabled = true; } catch(e) {}
+            try {
+                var echoFx2 = lLinesOnly.property("ADBE Effect Parade").addProperty("ADBE Echo");
+                echoFx2.property("ADBE Echo-0001").setValue(-0.08);
+                echoFx2.property("ADBE Echo-0002").setValue(5);
+            } catch(e) {}
+            echoComp = compMainOnly;
+        } else {
+            echoComp = buildEchoComps(txt);
+        }
+
+        centerEchoTexts();
+        activeComp.openInViewer();   // go back to the comp you started in
+    }
+
+    if (activeComp.id === echoComp.id) { app.endUndoGroup(); return; }
+
+    var selLayers = activeComp.selectedLayers;
+    var newLayer = activeComp.layers.add(echoComp);
+
+    if (selLayers.length > 0) {
+        var minIndex = selLayers[0].index;
+        for (var i = 1; i < selLayers.length; i++) if (selLayers[i].index < minIndex) minIndex = selLayers[i].index;
+        var targetLayer = activeComp.layer(minIndex);
+        try { if (newLayer.index > minIndex) newLayer.moveBefore(targetLayer); } catch(e) {}
+    }
+
+    for (var d = 1; d <= activeComp.numLayers; d++) {
+        try { activeComp.layer(d).selected = false; } catch(e) {}
+    }
+    newLayer.selected = true;
+
+    app.endUndoGroup();
+}
+
+// ─────────────────────────────────────────────────────────────
+// pulsingLoop
+//    Adds a null at the average position of the selected layers,
+//    parents unparented selected layers to it, and animates the null's
+//    scale 100% → 120% over 1 s from the current time with
+//    loopOut("pingpong").
+// ─────────────────────────────────────────────────────────────
+function pulsingLoop() {
+    app.beginUndoGroup("pulsingLoop");
+
+    // 1) Check comp and selection
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Please open a composition.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var selectedLayers = comp.selectedLayers;
+    if (!selectedLayers || selectedLayers.length === 0) {
+        alert("Please select at least one layer.");
+        app.endUndoGroup();
+        return;
+    }
+
+    // 2) Average position of selected layers
+    var totalX = 0, totalY = 0, totalZ = 0;
+    var is3D = false;
+    var validCount = 0;
+
+    for (var i = 0; i < selectedLayers.length; i++) {
+        var lyr = selectedLayers[i];
+        try {
+            var pos = lyr.property("ADBE Transform Group").property("ADBE Position").value;
+            // pos can be [x,y] or [x,y,z]
+            totalX += pos[0];
+            totalY += pos[1];
+            if (pos.length > 2) {
+                totalZ += pos[2];
+                is3D = true;
+            }
+            validCount++;
+        } catch (e) {
+            // skip layers without position (like adjustment layer parent issues)
+        }
+    }
+
+    if (validCount === 0) {
+        alert("Selected layers have no position property.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var avgPos = [totalX / validCount, totalY / validCount];
+    if (is3D) {
+        avgPos = [totalX / validCount, totalY / validCount, totalZ / validCount];
+    }
+
+    // Create null
+    var nullLayer = comp.layers.addNull();
+    nullLayer.name = "pulsingLoopNull";
+
+    // Make name unique if already exists
+    var suffix = 2;
+    while (comp.layer(nullLayer.name)!== null && comp.layer(nullLayer.name).index!== nullLayer.index) {
+        // find if another layer has same name
+        var exists = false;
+        for (var n = 1; n <= comp.numLayers; n++) {
+            if (comp.layer(n).name === nullLayer.name && comp.layer(n).index!== nullLayer.index) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) break;
+        nullLayer.name = "pulsingLoopNull " + suffix;
+        suffix++;
+    }
+
+    nullLayer.threeDLayer = is3D; // match if any layer was 3D
+    nullLayer.property("ADBE Transform Group").property("ADBE Position").setValue(avgPos);
+
+    // 3) Parent only layers with no parent
+    for (var j = 0; j < selectedLayers.length; j++) {
+        var sLayer = selectedLayers[j];
+        if (sLayer.parent === null && sLayer!== nullLayer) {
+            sLayer.parent = nullLayer;
+        }
+    }
+
+    // 4) Scale 100% -> 120% in 1s + loopOut pingpong
+    var scaleProp = nullLayer.property("ADBE Transform Group").property("ADBE Scale");
+    var t = comp.time; // start at current time indicator
+
+    scaleProp.setValueAtTime(t, [100, 100]);
+    scaleProp.setValueAtTime(t + 1, [120, 120]);
+
+    // Make it work for 3D too
+    if (is3D && scaleProp.value.length === 3) {
+        scaleProp.setValueAtTime(t, [100, 100, 100]);
+        scaleProp.setValueAtTime(t + 1, [120, 120, 120]);
+    }
+
+    scaleProp.expression = 'loopOut("pingpong")';
+
+    app.endUndoGroup();
+}
+
+// ─────────────────────────────────────────────────────────────
+// animateSpinIn   (menu: "Spin In")
+//    Selected layers, starting at the current time:
+//    Scale    50% → 130% → 100% of current (15f, 31f)
+//    Rotation +180° → current (31f)
+//    Opacity  0 → current (8f, linear)
+//    Frame offsets are at 24 fps, applied as seconds.
+// ─────────────────────────────────────────────────────────────
+function animateSpinIn() {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) { alert("No active composition."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("No layers selected."); return; }
+
+    var t = comp.time;
+    var t15 = 15 / 24, t31 = 31 / 24, t8 = 8 / 24;
+
+    function ease(speeds, inInf, outInf, n) {
+        var a = [], b = [];
+        for (var d = 0; d < n; d++) {
+            a.push(new KeyframeEase(0, inInf));
+            b.push(new KeyframeEase(0, outInf));
+        }
+        return [a, b];
+    }
+
+    app.beginUndoGroup("Quick Tool: Spin In");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
+
+            qtTrimIn(layer, t);
+
+            var tg = layer.property("ADBE Transform Group");
+            var scale = tg.property("ADBE Scale");
+            var rot = tg.property("ADBE Rotate Z");
+            var opac = tg.property("ADBE Opacity");
+            if (!scale || !rot || !opac) { continue; }
+
+            var cs = scale.valueAtTime(t, false);
+            var cr = rot.valueAtTime(t, false);
+            var co = opac.valueAtTime(t, false);
+            var n = cs.length;
+
+            // ── Scale: 50% → 130% → 100% (relative to current) ──
+            var s0 = [], s1 = [], s2 = [];
+            for (var d = 0; d < n; d++) {
+                s0.push(cs[d] * 0.5);
+                s1.push(cs[d] * 1.3);
+                s2.push(cs[d]);
+            }
+            scale.setValueAtTime(t,       s0);
+            scale.setValueAtTime(t + t15, s1);
+            scale.setValueAtTime(t + t31, s2);
+            var si = [scale.nearestKeyIndex(t), scale.nearestKeyIndex(t + t15), scale.nearestKeyIndex(t + t31)];
+            var e;
+            e = ease(null, 30, 100, n);     scale.setTemporalEaseAtKey(si[0], e[0], e[1]);
+            e = ease(null, 30, 16.667, n);  scale.setTemporalEaseAtKey(si[1], e[0], e[1]);
+            e = ease(null, 16.667, 16.667, n); scale.setTemporalEaseAtKey(si[2], e[0], e[1]);
+
+            // ── Rotation: +180° → current ──
+            rot.setValueAtTime(t,       cr + 180);
+            rot.setValueAtTime(t + t31, cr);
+            var ri = [rot.nearestKeyIndex(t), rot.nearestKeyIndex(t + t31)];
+            e = ease(null, 65, 65, 1);     rot.setTemporalEaseAtKey(ri[0], e[0], e[1]);
+            e = ease(null, 65, 16.667, 1); rot.setTemporalEaseAtKey(ri[1], e[0], e[1]);
+
+            // ── Opacity: 0 → current, linear ──
+            opac.setValueAtTime(t,      0);
+            opac.setValueAtTime(t + t8, co);
+            var oi = [opac.nearestKeyIndex(t), opac.nearestKeyIndex(t + t8)];
+            for (var k = 0; k < oi.length; k++) {
+                opac.setInterpolationTypeAtKey(oi[k], KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+            }
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
 // 4. fadeToBlack
 //    Selected layers: apply Color Balance (HLS),
 //    Lightness 0 → -100 over 0.5 s. No easing.
@@ -5093,6 +5671,158 @@ function loopOutApply(type) {
 
     if (applied === 0 && skipped > 0) {
         alert("Nothing applied. Properties need 2+ keyframes, and layers must support Time Remap.");
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Glitch Transition
+//    Builds (once) a "Glitch Transition" precomp from adjustment layers
+//    and drops it into the active comp, centered on the current time.
+//    Placed above the topmost selected layer, or on top if none selected.
+// ─────────────────────────────────────────────────────────────
+var GLITCH_NAME = "Glitch Transition";
+var GLITCH_FPS = 24;
+var GLITCH_DUR = 0.5; // 12 frames, center = 0.25s
+
+function glitchFindComp(name) {
+    for (var i = 1; i <= app.project.numItems; i++) {
+        var it = app.project.item(i);
+        if (it instanceof CompItem && it.name === name) return it;
+    }
+    return null;
+}
+
+function glitchAddAdj(comp, name) {
+    var l = comp.layers.addSolid([1, 1, 1], name, comp.width, comp.height, 1, comp.duration);
+    l.adjustmentLayer = true;
+    return l;
+}
+
+function glitchEaseKey(prop, k, inInf, outInf) {
+    prop.setTemporalEaseAtKey(k, [new KeyframeEase(0, inInf)], [new KeyframeEase(0, outInf)]);
+}
+
+function glitchLinearKeys(prop) {
+    for (var k = 1; k <= prop.numKeys; k++) {
+        prop.setInterpolationTypeAtKey(k, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+    }
+}
+
+// RGB split layer: Transform offset + Shift Channels (10 = "Full Off") + Lighten
+function glitchAddRGBLayer(comp, name, posX, offProps) {
+    var l = glitchAddAdj(comp, name);
+    l.blendingMode = BlendingMode.LIGHTEN;
+    var fx = l.property("ADBE Effect Parade");
+
+    var tr = fx.addProperty("ADBE Geometry2");
+    tr.property("ADBE Geometry2-0002").setValue([posX, 540]);
+    tr.property("ADBE Geometry2-0003").setValue(110);
+
+    var sh = fx.addProperty("ADBE Shift Channels");
+    for (var i = 0; i < offProps.length; i++) sh.property(offProps[i]).setValue(10);
+
+    var op = l.property("ADBE Transform Group").property("ADBE Opacity");
+    op.setValueAtTime(0, 0);
+    op.setValueAtTime(2 / GLITCH_FPS, 100);
+    return l;
+}
+
+// Build the glitch comp (bottom layer first)
+function glitchBuildComp() {
+    var gc = app.project.items.addComp(GLITCH_NAME, 1920, 1080, 1, GLITCH_DUR, GLITCH_FPS);
+    gc.bgColor = [0, 0, 0];
+    var F = GLITCH_FPS;
+
+    // 5: blue only, shifted left
+    glitchAddRGBLayer(gc, "Glitch RGB Blue", 944, ["ADBE Shift Channels-0002", "ADBE Shift Channels-0003"]);
+    // 4: red only, shifted right
+    glitchAddRGBLayer(gc, "Glitch RGB Red", 1040, ["ADBE Shift Channels-0003", "ADBE Shift Channels-0004"]);
+
+    // 3: turbulent displace
+    var disp = glitchAddAdj(gc, "Glitch Displace");
+    var td = disp.property("ADBE Effect Parade").addProperty("ADBE Turbulent Displace");
+    td.property("ADBE Turbulent Displace-0001").setValue(10);
+    td.property("ADBE Turbulent Displace-0003").setValue(2);
+    td.property("ADBE Turbulent Displace-0004").setValue([0, 397]);
+    var amt = td.property("ADBE Turbulent Displace-0002");
+    amt.setValueAtTime(0, 610);
+    amt.setValueAtTime(2 / F, 5000);
+    amt.setValueAtTime(6 / F, 5000);
+    amt.setValueAtTime(12 / F, 0);
+    for (var k = 1; k <= 4; k++) glitchEaseKey(amt, k, 33.333, (k === 4) ? 16.667 : 33.333);
+
+    // 2: white block flicker
+    var blocks = gc.layers.addSolid([1, 1, 1], "Glitch Blocks", 1920, 1080, 1, GLITCH_DUR);
+    var bd = blocks.property("ADBE Effect Parade").addProperty("ADBE Block Dissolve");
+    bd.property("ADBE Block Dissolve-0002").setValue(262);
+    bd.property("ADBE Block Dissolve-0003").setValue(38);
+    bd.property("ADBE Block Dissolve-0005").setValue(0);
+    var tc = bd.property("ADBE Block Dissolve-0001");
+    var vals = [93, 81, 87, 94, 90, 88, 84, 98, 91, 95, 91, 95];
+    for (var i = 0; i < vals.length; i++) tc.setValueAtTime(i / F, vals[i]);
+    glitchLinearKeys(tc);
+
+    // 1: lens punch (scale + convergence)
+    var lens = glitchAddAdj(gc, "Glitch Lens");
+    var fx = lens.property("ADBE Effect Parade");
+    var tr = fx.addProperty("ADBE Geometry2");
+    var sc = tr.property("ADBE Geometry2-0003");
+    sc.setValueAtTime(0, 137);
+    sc.setValueAtTime(GLITCH_DUR, 100);
+    glitchEaseKey(sc, 1, 95, 50);
+    glitchEaseKey(sc, 2, 95, 16.667);
+
+    var cc = fx.addProperty("CC Lens");
+    cc.property("CC Lens-0002").setValue(244);
+    var conv = cc.property("CC Lens-0003");
+    conv.setValueAtTime(0, 0);
+    conv.setValueAtTime(2 / F, 100);
+    conv.setValueAtTime(7 / F, 100);
+    conv.setValueAtTime(11 / F, 0);
+    glitchLinearKeys(conv);
+
+    return gc;
+}
+
+function glitchTransition() {
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem)) {
+        alert("Glitch Transition: open a comp and make it active first.");
+        return;
+    }
+
+    app.beginUndoGroup("Glitch Transition");
+    try {
+        var gc = glitchFindComp(GLITCH_NAME) || glitchBuildComp();
+
+        if (comp === gc) {
+            alert("Glitch Transition: switch to the comp you want to add the transition to.");
+            return;
+        }
+
+        // topmost selected layer (read BEFORE adding)
+        var sel = comp.selectedLayers, topSel = null;
+        for (var i = 0; i < sel.length; i++) {
+            if (!topSel || sel[i].index < topSel.index) topSel = sel[i];
+        }
+
+        var gl = comp.layers.add(gc);          // lands on top of the comp
+        if (topSel) gl.moveBefore(topSel);     // or directly above the selection
+        gl.collapseTransformation = true;      // continuously rasterize
+        // Fit to Comp Width (menu command acts on the selected layer only)
+        for (var d = 0; d < sel.length; d++) sel[d].selected = false;
+        gl.selected = true;
+        var fitCmd = app.findMenuCommandId("Fit to Comp Width");
+        if (fitCmd !== 0) app.executeCommand(fitCmd);
+
+        // center of the glitch = current time (snapped to a frame)
+        var fd = comp.frameDuration;
+        var cti = Math.round(comp.time / fd) * fd;
+        gl.startTime = Math.round((cti - gc.duration / 2) / fd) * fd;
+    } catch (e) {
+        alert("Glitch Transition error: " + e.toString() + "\nLine: " + e.line);
+    } finally {
+        app.endUndoGroup();
     }
 }
 
@@ -6321,6 +7051,542 @@ function gameWinText() {
     app.endUndoGroup();
     comp_C1.openInViewer();
     alert("RECREATED FROM LATEST DUMP WITH REAL TARGET + SHARED MATTE WORKAROUND\n\nDepth 4 RSC2 Linear Wipe\nDepth 3 PC1 10 layers\nDepth 2 PC2 5 layers\nDepth 1 RSC1: 11 layers - 5x PC2 matte copies + 5 solids ALPHA matted by PC2 + 1 visible PC2\nDepth 0 Comp1 GAME WIN!\n\nAll A-E now matted by Pre-comp 2 but Pre-comp 2 stays visible");
+}
+
+// ─────────────────────────────────────────────────────────────
+// filmGrunge
+//    White dust + scratches, 10 s loop. Builds (once) the
+//    "filmGrunge_1920x1080_10s_LOOP" comp, then adds it to the active comp
+//    above the topmost selected layer (or on top), starting at the current
+//    time, Screen blend. Loops via time remap if the active comp runs longer.
+// ─────────────────────────────────────────────────────────────
+function filmGrunge() {
+    var W = 1920, H = 1080, DUR = 10, FPS = 30;
+    var COMP_NAME = "filmGrunge_1920x1080_10s_LOOP";
+
+    var activeComp = app.project.activeItem;
+    if (!(activeComp instanceof CompItem)) { alert("Open a comp first."); return; }
+    if (activeComp.name === COMP_NAME) { alert("Switch to the comp you want to add the grunge to."); return; }
+
+    // topmost selected layer (read BEFORE adding)
+    var topSel = null, sel = activeComp.selectedLayers;
+    for (var q = 0; q < sel.length; q++) {
+        if (!topSel || sel[q].index < topSel.index) topSel = sel[q];
+    }
+
+    app.beginUndoGroup("Film Grunge");
+    try {
+        // 1. Create or reuse source comp
+        var srcComp = null;
+        for (var i = 1; i <= app.project.numItems; i++) {
+            if (app.project.items[i] instanceof CompItem && app.project.items[i].name == COMP_NAME) {
+                srcComp = app.project.items[i];
+                break;
+            }
+        }
+        if (!srcComp) {
+            srcComp = app.project.items.addComp(COMP_NAME, W, H, 1, DUR, FPS);
+            srcComp.bgColor = [0,0,0];
+
+            // --- DUST LAYER ---
+            var dust = srcComp.layers.addSolid([1,1,1], "dust_CCStarBurst", W, H, 1, DUR);
+            var dustEff = dust.property("ADBE Effect Parade").addProperty("CC Star Burst");
+            dustEff.property("CC Star Burst-0004").setValue(32); // Grid Spacing
+            dustEff.property("CC Star Burst-0005").setValue(30.0); // Size
+            dustEff.property("CC Star Burst-0007").setValue(0.0); // Shading
+            dustEff.property("CC Star Burst-0001").setValue(800.0); // Scatter
+            dustEff.property("CC Star Burst-0002").setValue(0.0); // Speed
+            dustEff.property("CC Star Burst-0003").setValue(0);
+            dustEff.property("CC Star Burst-0006").setValue(0.0); // Blend
+
+            var dustGrid = dustEff.property("CC Star Burst-0004");
+            dustGrid.setValueAtTime(0, 1);
+            dustGrid.setValueAtTime(1, 30);
+            try {
+                dustGrid.expression = "loopOut(\"cycle\")";
+            } catch(e) {
+                for (var t = 2; t <= DUR; t += 1) {
+                    dustGrid.setValueAtTime(t, 1);
+                    dustGrid.setValueAtTime(t + 0.9, 30);
+                }
+            }
+            try { dust.blendingMode = BlendingMode.SCREEN; } catch(e2){}
+
+            // --- SCRATCHES - 6 thin tall solids ---
+            for (var n = 0; n < 6; n++) {
+                var sw = Math.floor(1 + Math.random() * 2);
+                var sl = srcComp.layers.addSolid([1,1,1], "SCRATCH_V_" + n, sw, H + 200, 1, DUR);
+                sl.transform.position.setValue([Math.random() * W, H / 2]);
+                sl.transform.opacity.expression = "posterizeTime(22);\nseedRandom(" + n + ",true);\nif(random()>0.58)random(30,100) else 0";
+                sl.transform.position.expression = "posterizeTime(30);\nseedRandom(" + (n * 33) + ",true);\nx=value[0]+wiggle(8," + (50 + Math.random() * 60) + ")[0];\n[x,value[1]]";
+                try { sl.blendingMode = BlendingMode.SCREEN; } catch(e3){}
+            }
+        }
+
+        // 2. Add to active comp, above topmost selected layer (or on top)
+        var curTime = activeComp.time;
+        var newLayer = activeComp.layers.add(srcComp);
+        if (topSel) newLayer.moveBefore(topSel); else newLayer.moveToBeginning();
+        newLayer.startTime = curTime;
+
+        // Loop via time remap if the active comp runs longer than the grunge
+        try {
+            if (activeComp.duration - curTime > DUR) {
+                newLayer.timeRemapEnabled = true;
+                newLayer.outPoint = activeComp.duration;
+                newLayer.property("ADBE Time Remapping").expression = "loopOut(\"cycle\")";
+            }
+        } catch(e4){}
+
+        try { newLayer.blendingMode = BlendingMode.SCREEN; } catch(e5){}
+        newLayer.label = 2; // yellow label
+        newLayer.selected = true;
+    } catch(err) {
+        alert("filmGrunge FAILED at line " + err.line + ":\n" + err.message);
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// bokehBackground
+//    Builds (once) the "Bokeh Background - 20s Loop" comp, then adds it
+//    to the active comp above the topmost selected layer (or on top) at
+//    the current time, blend mode Add.
+//    Controls: "Bokeh Master" null moves all bokeh; its "Radius (%)"
+//    slider scales every bokeh circle radius.
+// ─────────────────────────────────────────────────────────────
+function bokehBackground() {
+    var COMP_NAME = "Bokeh Background - 20s Loop";
+
+    var active = app.project.activeItem;
+    if (!(active instanceof CompItem)) { alert("Open a comp first."); return; }
+    if (active.name === COMP_NAME) { alert("Switch to the comp you want to add the bokeh to."); return; }
+
+    // topmost selected layer (read BEFORE adding)
+    var topSel = null, sel = active.selectedLayers;
+    for (var s = 0; s < sel.length; s++) {
+        if (!topSel || sel[s].index < topSel.index) topSel = sel[s];
+    }
+
+    function findComp(name) {
+        for (var k = 1; k <= app.project.numItems; k++) {
+            var it = app.project.item(k);
+            if (it instanceof CompItem && it.name === name) return it;
+        }
+        return null;
+    }
+
+    function buildComp() {
+        if (!app.project) app.newProject();
+        var compW = 1920, compH = 1080, compFPS = 30, compDur = 20;
+        var comp = app.project.items.addComp("Bokeh Background - 20s Loop", compW, compH, 1, compDur, compFPS);
+        try { comp.bgColor = [0.078, 0.059, 0.047]; } catch(e){}
+
+        var MASK_ADD, MASK_SUB, BLEND_SCREEN, BLEND_MULT, BLEND_OVER;
+        try {
+            if (typeof MaskMode !== 'undefined') { MASK_ADD = MaskMode.ADD; MASK_SUB = MaskMode.SUBTRACT; }
+            else if (typeof MaskModeType !== 'undefined') { MASK_ADD = MaskModeType.ADD; MASK_SUB = MaskModeType.SUBTRACT; }
+            else { MASK_ADD = 1; MASK_SUB = 2; }
+        } catch(e){ MASK_ADD = 1; MASK_SUB = 2; }
+        try {
+            if (typeof BlendingMode !== 'undefined') { BLEND_SCREEN = BlendingMode.SCREEN; BLEND_MULT = BlendingMode.MULTIPLY; BLEND_OVER = BlendingMode.OVERLAY; }
+            else { BLEND_SCREEN = 15; BLEND_MULT = 13; BLEND_OVER = 14; }
+        } catch(e){ BLEND_SCREEN = 15; BLEND_MULT = 13; BLEND_OVER = 14; }
+
+        function randomRange(a,b){ return a+Math.random()*(b-a); }
+        
+        // FIX 2: Even distribution across edges - deterministic per index
+        function getEvenEdgePos(index, total, w, h){
+            var minDim = Math.min(w,h);
+            var edge = index % 4; // 0=top,1=right,2=bottom,3=left - ensures 7-8 per side for 30
+            var slot = Math.floor(index / 4); // which bokeh on this edge
+            var slotsPerEdge = Math.ceil(total / 4); // 8 for 30
+            // Even t along edge 0-1 with jitter 70% of slot width
+            var t = (slot + randomRange(0.15, 0.85)) / slotsPerEdge;
+            var ed = 0.38; // 38% deep edge band
+            var x,y;
+            if(edge===0){ // top
+                x = w * t;
+                y = randomRange(0, h*ed);
+            } else if(edge===1){ // right
+                x = w - randomRange(0, w*ed);
+                y = h * t;
+            } else if(edge===2){ // bottom
+                x = w * (1 - t); // reverse for even spread
+                y = h - randomRange(0, h*ed);
+            } else { // left
+                x = randomRange(0, w*ed);
+                y = h * (1 - t);
+            }
+            x += randomRange(-25,25); y += randomRange(-25,25);
+            
+            // Enforce 380px clear center - push out if too close
+            var dx = x - w/2, dy = y - h/2;
+            var dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 380){
+                var ang = Math.atan2(dy,dx);
+                var push = 380 + randomRange(10, 120);
+                x = w/2 + Math.cos(ang)*push;
+                y = h/2 + Math.sin(ang)*push;
+            }
+            return [x,y];
+        }
+        
+        function ellipseShape(w,h,sx,sy){
+            var cx=w/2, cy=h/2, rx=w/2*sx, ry=h/2*sy, k=0.5522848;
+            var s=new Shape();
+            s.vertices=[[cx+rx,cy],[cx,cy+ry],[cx-rx,cy],[cx,cy-ry]];
+            s.inTangents=[[0,-ry*k],[rx*k,0],[0,ry*k],[-rx*k,0]];
+            s.outTangents=[[0,ry*k],[-rx*k,0],[0,-ry*k],[rx*k,0]];
+            s.closed=true; return s;
+        }
+        function safeAddMask(layer, shape, feather, mode){
+            try{
+                var mp=layer.property("ADBE Mask Parade"); if(!mp) return null;
+                var m=mp.addProperty("ADBE Mask Atom"); if(!m) return null;
+                try{ m.property("ADBE Mask Shape").setValue(shape); }catch(e){}
+                try{ m.property("ADBE Mask Feather").setValue([feather,feather]); }catch(e1){ try{ m.feather=[feather,feather]; }catch(e2){} }
+                try{ m.maskMode = mode; }catch(e1){ try{ m.property("ADBE Mask Mode").setValue(mode); }catch(e2){} }
+                try{ m.property("ADBE Mask Opacity").setValue(100); }catch(e){}
+                return m;
+            }catch(e){ return null; }
+        }
+
+        // Base
+        var bg=comp.layers.addSolid([0.12,0.09,0.07],"BG - Dark Warm",compW,compH,1);
+        var inner=comp.layers.addSolid([0.20,0.14,0.10],"BG - Center Lift",compW,compH,1);
+        try{ inner.blendingMode=BLEND_SCREEN; inner.property("ADBE Transform Group").property("ADBE Opacity").setValue(30); }catch(e){}
+        // Inner lift - also make 50% bigger per request (bigger ADD mask = larger soft center)
+        safeAddMask(inner, ellipseShape(compW,compH,1.2,1.35), 400, MASK_ADD);
+
+        // FIX 4: Vignettes - masks 50% bigger = vignette smaller (less intrusive)
+        var vig=comp.layers.addSolid([0.85,0.38,0.08],"Vignette - Warm Edge",compW,compH,1);
+        try{ vig.blendingMode=BLEND_SCREEN; vig.property("ADBE Transform Group").property("ADBE Opacity").setValue(65);}catch(e){}
+        safeAddMask(vig, ellipseShape(compW,compH,0.78,0.975), 400, MASK_SUB); // was 0.52,0.65 -> *1.5
+
+        var dark=comp.layers.addSolid([0,0,0],"Vignette - Dark Falloff",compW,compH,1);
+        try{ dark.blendingMode=BLEND_MULT; dark.property("ADBE Transform Group").property("ADBE Opacity").setValue(60);}catch(e){}
+        safeAddMask(dark, ellipseShape(compW,compH,0.95,1.10), 350, MASK_SUB); // was 0.70,0.85 -> *1.5 capped
+
+        var aging = comp.layers.addSolid([0.5,0.5,0.5], "Vignette - Pink to Yellow Aging", compW, compH, 1);
+        try{
+            aging.blendingMode = BLEND_OVER;
+            aging.property("ADBE Transform Group").property("ADBE Opacity").setValue(45);
+            try{
+                var ramp = aging.property("ADBE Effect Parade").addProperty("ADBE Ramp");
+                if(ramp){
+                    try{ ramp.property("ADBE Ramp-0001").setValue([compW*0.15, compH*0.15]); }catch(e){}
+                    try{ ramp.property("ADBE Ramp-0002").setValue([compW*0.85, compH*0.85]); }catch(e){}
+                    try{ ramp.property("ADBE Ramp-0003").setValue([0.95, 0.35, 0.55]); }catch(e){}
+                    try{ ramp.property("ADBE Ramp-0004").setValue([0.95, 0.85, 0.30]); }catch(e){}
+                    try{ ramp.property("ADBE Ramp-0005").setValue(0); }catch(e){}
+                }
+            }catch(e){
+                try{
+                    var tint = aging.property("ADBE Effect Parade").addProperty("ADBE Tint");
+                    if(tint){
+                        try{ tint.property("ADBE Tint-0001").setValue([0,0,0]); }catch(e){}
+                        try{ tint.property("ADBE Tint-0002").setValue([0.95, 0.6, 0.4]); }catch(e){}
+                    }
+                }catch(e2){}
+            }
+        }catch(e){}
+        safeAddMask(aging, ellipseShape(compW,compH,0.90,1.125), 300, MASK_SUB); // was 0.60,0.75 -> *1.5
+
+        var warm=comp.layers.addSolid([0.60,0.25,0.05],"Vignette - Reddish Tint",compW,compH,1);
+        try{ warm.blendingMode=BLEND_OVER; warm.property("ADBE Transform Group").property("ADBE Opacity").setValue(25);}catch(e){}
+        safeAddMask(warm, ellipseShape(compW,compH,0.93,1.17), 280, MASK_SUB); // was 0.62,0.78 -> *1.5
+
+        // --- FIX 1: Null named Bokeh Master with Slider at 0,0 so parenting doesn't shift bokeh ---
+        var ctrlNull = comp.layers.addNull(compDur);
+        ctrlNull.name = "Bokeh Master";
+        try{
+            // Start at center, parent all bokeh, THEN move to 0,0 at the end to preserve world pos
+            ctrlNull.property("ADBE Transform Group").property("ADBE Position").setValue([compW/2, compH/2]);
+        }catch(e){}
+        var sliderEff = null;
+        try{
+            sliderEff = ctrlNull.property("ADBE Effect Parade").addProperty("ADBE Slider Control");
+            if(sliderEff){
+                sliderEff.name = "Radius (%)";
+                try{ sliderEff.property("ADBE Slider Control-0001").setValue(100); }catch(e){}
+            }
+        }catch(e){}
+
+        // Bokeh - 30, even edge distribution, parented to Bokeh Master
+        var colors=[[1.0,0.85,0.45],[1.0,0.65,0.25],[1.0,0.45,0.20],[0.95,0.85,0.70],[1.0,0.95,0.60],[0.90,0.50,0.15]];
+        for(var i=0;i<30;i++){
+            var pos=getEvenEdgePos(i, 30, compW, compH);
+            var size = randomRange(100, 300);
+            if(Math.random() < 0.3) size = randomRange(70, 140);
+            if(Math.random() < 0.15) size = randomRange(240, 360);
+            var col=colors[Math.floor(Math.random()*colors.length)];
+            var b=comp.layers.addSolid([0,0,0],"Bokeh "+(i+1),compW,compH,1);
+            
+            var baseOpacity = randomRange(50,92);
+            var driftX = randomRange(-80, 80);
+            var driftY = randomRange(-80, 80);
+            var scalePulse = randomRange(8, 20);
+            var opacityFlick = randomRange(8, 18);
+            
+            try{ b.blendingMode=BLEND_SCREEN; }catch(e){}
+
+            try{
+                var circ=b.property("ADBE Effect Parade").addProperty("ADBE Circle");
+                if(circ){
+                    try{ circ.property("ADBE Circle-0001").setValue([compW/2, compH/2]); }catch(e){}
+                    try{ circ.property("ADBE Circle-0002").setValue(size/2); }catch(e){}
+                    try{ circ.property("ADBE Circle-0003").setValue(0); }catch(e){}
+                    var featherVal = (Math.random() < 0.25) ? 0 : randomRange(8, 40);
+                    var innerFeather = (featherVal === 0) ? 0 : randomRange(0, 8);
+                    try{ circ.property("ADBE Circle-0005").setValue([featherVal, featherVal]); }catch(e){}
+                    try{ circ.property("ADBE Circle-0006").setValue(featherVal); }catch(e){}
+                    try{ circ.property("ADBE Circle-0007").setValue(innerFeather); }catch(e){}
+                    try{ circ.property("ADBE Circle-0008").setValue(innerFeather); }catch(e){}
+                    try{ circ.property("ADBE Circle-0010").setValue(col); }catch(e){}
+                    try{ circ.property("ADBE Circle-0011").setValue(100); }catch(e){}
+                    try{ circ.property("ADBE Circle-0012").setValue(0); }catch(e){}
+                    
+                    try{
+                        var radiusProp = circ.property("ADBE Circle-0002");
+                        var baseRad = size/2;
+                        var expr = "baseRad = " + baseRad.toFixed(2) + ";\n" +
+                                   "try{\n" +
+                                   "  ctrl = thisComp.layer(\"Bokeh Master\").effect(\"Radius (%)\")(\"Slider\");\n" +
+                                   "  baseRad * (ctrl/100);\n" +
+                                   "} catch(e){ baseRad; }";
+                        radiusProp.expression = expr;
+                    }catch(e){}
+                }
+            }catch(e){}
+
+            try{
+                var posProp = b.property("ADBE Transform Group").property("ADBE Position");
+                var scaleProp = b.property("ADBE Transform Group").property("ADBE Scale");
+                var opacProp = b.property("ADBE Transform Group").property("ADBE Opacity");
+                
+                try{ posProp.expression = ""; }catch(e){}
+                try{ scaleProp.expression = ""; }catch(e){}
+                try{ opacProp.expression = ""; }catch(e){}
+                
+                var posMid = [pos[0]+driftX, pos[1]+driftY];
+                posProp.setValueAtTime(0, pos);
+                posProp.setValueAtTime(compDur/2, posMid);
+                posProp.setValueAtTime(compDur, pos);
+                
+                scaleProp.setValueAtTime(0, [100,100]);
+                scaleProp.setValueAtTime(compDur/2, [100+scalePulse, 100+scalePulse]);
+                scaleProp.setValueAtTime(compDur, [100,100]);
+                
+                opacProp.setValueAtTime(0, baseOpacity);
+                opacProp.setValueAtTime(compDur/2, baseOpacity + (Math.random()<0.5 ? opacityFlick : -opacityFlick));
+                opacProp.setValueAtTime(compDur, baseOpacity);
+                
+                try{
+                    var easeIn = new KeyframeEase(0, 33);
+                    var easeOut = new KeyframeEase(0, 33);
+                    for(var k=1;k<=posProp.numKeys;k++){
+                        posProp.setTemporalEaseAtKey(k, [easeIn], [easeOut]);
+                        scaleProp.setTemporalEaseAtKey(k, [easeIn], [easeOut]);
+                        opacProp.setTemporalEaseAtKey(k, [easeIn], [easeOut]);
+                    }
+                }catch(e){}
+                
+            }catch(e){}
+
+            // Parent AFTER keyframes
+            try{ b.parent = ctrlNull; }catch(e){}
+        }
+
+        var grain=comp.layers.addSolid([0.5,0.5,0.5],"Film Grain",compW,compH,1);
+        try{ grain.blendingMode=BLEND_OVER; grain.property("ADBE Transform Group").property("ADBE Opacity").setValue(8);}catch(e){}
+        return comp;
+    }
+
+    app.beginUndoGroup("Bokeh Background");
+    try {
+        var src = findComp(COMP_NAME);
+        if (!src || src.numLayers === 0) src = buildComp();
+
+        var newLayer = active.layers.add(src);
+        newLayer.startTime = active.time;
+        if (topSel) newLayer.moveBefore(topSel); else newLayer.moveToBeginning();
+        newLayer.blendingMode = BlendingMode.ADD;
+        newLayer.selected = true;
+    } catch (err) {
+        alert("Error in bokehBackground(): " + err.toString() + " Line: " + err.line);
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// flowerParticles
+//    One-click flying flower petals (CC Particle World, textured).
+//    Builds "Petal Base", "Petal Particles" and "Flower Particles" comps
+//    once, then drops "Flower Particles" into the active comp at the
+//    current time, above the topmost selected layer (or on top).
+// ─────────────────────────────────────────────────────────────
+function flowerParticles() {
+    var FPS = 24, DUR = 30;
+    var failed = [];
+
+    // ===== CC Particle World settings (from your tuned effect) =====
+    var CFG = {
+        birthRate: 0.1, longevity: 6,
+        posX: -0.52, posY: 0, posZ: 0, radX: 0.05, radY: 0.5, radZ: 0.2,
+        animation: 11, velocity: 0.4, extra: 0.5, extraAngle: 360,
+        bobAmount: 0.01,
+        particleType: 24, textureTime: 1,
+        rotSpeed: 40, initRot: 360, rotAxis: 4,
+        birthSize: 0.3, deathSize: 0.3, sizeVar: 60, maxOpacity: 75,
+        colorMap: 2,
+        birthColor: [1, 0, 0.9647, 1], deathColor: [1, 0.7451, 0.9370, 1]
+    };
+
+    // ===== Petal definitions (from your extractor dump) =====
+    var PETALS = [
+        { name: "Petal 1", rot: 0,    color: [1, 0.78, 0.85],
+          v: [[0,50],[-32,-5],[-15,-48],[0,-36],[15,-48],[32,-5]],
+          i: [[14,-10],[0,20],[-9,5],[-6,-6],[-6,-1],[0,-20]],
+          o: [[-14,-10],[0,-20],[6,-1],[6,-6],[9,5],[0,20]] },
+        { name: "Petal 2", rot: -176, color: [0.97, 0.6, 0.74],
+          v: [[0,50],[-24.96,-5],[-11.7,-48],[0,-40.8],[11.7,-48],[24.96,-5]],
+          i: [[10.92,-10],[0,20],[-7.02,5],[-4.68,-3.6],[-4.68,-1],[0,-20]],
+          o: [[-10.92,-10],[0,-20],[4.68,-1],[4.68,-3.6],[7.02,5],[0,20]] },
+        { name: "Petal 3", rot: -20,  color: [1, 0.85, 0.9],
+          v: [[-8,42.5],[-34.4,-4.25],[-8.82,-40.8],[7.104,-37.74],[24.18,-40.8],[36,-4.25]],
+          i: [[15.4,-8.5],[0,17],[-9.9,4.25],[-6.6,-1.53],[-6.6,-0.85],[0,-17]],
+          o: [[-15.4,-8.5],[0,-17],[6.6,-0.85],[6.6,-1.53],[9.9,4.25],[0,17]] }
+    ];
+
+    function findComp(name) {
+        for (var k = 1; k <= app.project.numItems; k++) {
+            var it = app.project.item(k);
+            if (it instanceof CompItem && it.name === name) return it;
+        }
+        return null;
+    }
+
+    function hasParticleEffect(comp) {
+        for (var k = 1; k <= comp.numLayers; k++) {
+            var fxParade = comp.layer(k).property("ADBE Effect Parade");
+            if (fxParade && fxParade.property("CC Particle World")) return true;
+        }
+        return false;
+    }
+
+    // ----- Comp 1: Petal Base (128x128, 3 frames) -----
+    function getPetalBase() {
+        var comp = findComp("Petal Base");
+        if (comp && comp.numLayers > 0) return comp;
+        if (!comp) comp = app.project.items.addComp("Petal Base", 128, 128, 1, 3 / FPS, FPS);
+        for (var n = 0; n < PETALS.length; n++) {
+            var d = PETALS[n];
+            var shape = new Shape();
+            shape.vertices = d.v; shape.inTangents = d.i; shape.outTangents = d.o; shape.closed = true;
+
+            var layer = comp.layers.addShape();
+            layer.name = d.name;
+            var grp = layer.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+            grp.name = "Petal";
+            var contents = grp.property("ADBE Vectors Group");
+            contents.addProperty("ADBE Vector Shape - Group").property("ADBE Vector Shape").setValue(shape);
+            contents.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(d.color);
+            var tr = layer.property("ADBE Transform Group");
+            tr.property("ADBE Position").setValue([64, 64]);
+            tr.property("ADBE Rotate Z").setValue(d.rot);
+            layer.inPoint = n * comp.frameDuration;
+            layer.outPoint = (n + 1) * comp.frameDuration;
+        }
+        return comp;
+    }
+
+    // ----- Comp 2: Petal Particles (128x128, 30s, looped time remap) -----
+    function getPetalParticles(base) {
+        var comp = findComp("Petal Particles");
+        if (comp && comp.numLayers > 0) return comp;
+        if (!comp) comp = app.project.items.addComp("Petal Particles", 128, 128, 1, DUR, FPS);
+        var layer = comp.layers.add(base);
+        layer.timeRemapEnabled = true;
+        var tr = layer.property("ADBE Time Remapping");
+        tr.expression = "Math.floor(timeToFrames(time)) % 3 * thisComp.frameDuration;";
+        layer.outPoint = comp.duration;
+        if (tr.expressionError !== "") throw new Error("Time Remap: " + tr.expressionError);
+        return comp;
+    }
+
+    // ----- Comp 3: Flower Particles (1920x1080, CC Particle World) -----
+    function getFlowerParticles(texComp) {
+        var comp = findComp("Flower Particles");
+        if (comp && hasParticleEffect(comp)) return comp;   // already built, reuse
+        if (!comp) comp = app.project.items.addComp("Flower Particles", 1920, 1080, 1, DUR, FPS);
+
+        var solid = comp.layers.addSolid([0, 0, 0], "Particles", 1920, 1080, 1, DUR);
+        var tex = comp.layers.add(texComp);   // lands on top = layer 1
+        tex.enabled = false;                  // eye off, texture only
+
+        var fx = solid.property("ADBE Effect Parade").addProperty("CC Particle World");
+        function P(id) { return fx.property("CC Particle World-" + id); }
+        function set(id, val) {
+            try { P(id).setValue(val); } catch (e) { failed.push(id); }
+        }
+
+        set("0004", CFG.birthRate);
+        set("0005", CFG.longevity);
+        set("0007", CFG.posX); set("0008", CFG.posY); set("0009", CFG.posZ);
+        set("0010", CFG.radX); set("0011", CFG.radY); set("0012", CFG.radZ);
+
+        set("0015", CFG.animation);
+        set("0016", CFG.velocity);
+        set("0019", CFG.extra);
+        set("0020", CFG.extraAngle);
+        set("0095", 1); set("0096", 0); set("0097", 0);       // direction: left to right
+
+        // Wind bobbing: Physics > Gravity
+        try {
+            P("0018").expression = "Math.sin(time * Math.PI) * " + CFG.bobAmount + ";";
+        } catch (e) { failed.push("0018 (expression)"); }
+
+        set("0023", CFG.particleType);        // Textured Square
+        set("0045", tex.index);               // Texture Layer = layer 1 (Source)
+        set("0047", CFG.textureTime);
+        set("0043", CFG.rotSpeed);
+        set("0042", CFG.initRot);
+        set("0071", CFG.rotAxis);
+        set("0024", CFG.birthSize);
+        set("0025", CFG.deathSize);
+        set("0026", CFG.sizeVar);
+        set("0027", CFG.maxOpacity);
+        set("0028", CFG.colorMap);
+        set("0029", CFG.birthColor);
+        set("0030", CFG.deathColor);
+        return comp;
+    }
+
+    // ----- Place in active comp -----
+    var active = app.project.activeItem;
+    if (!(active instanceof CompItem)) { alert("Open a comp first."); return; }
+    var topSel = null, sel = active.selectedLayers;
+    for (var s = 0; s < sel.length; s++) {
+        if (!topSel || sel[s].index < topSel.index) topSel = sel[s];
+    }
+
+    app.beginUndoGroup("Flower Particles");
+    try {
+        var base = getPetalBase();
+        var texComp = getPetalParticles(base);
+        var mother = getFlowerParticles(texComp);
+        var newLayer = active.layers.add(mother);
+        newLayer.startTime = active.time;
+        if (topSel) newLayer.moveBefore(topSel); else newLayer.moveToBeginning();
+    } catch (e) {
+        alert("flowerParticles error: " + e.toString() + "\nLine: " + e.line);
+    }
+    app.endUndoGroup();
+
+    if (failed.length > 0) alert("These CC Particle World properties could not be set:\n" + failed.join(", "));
 }
 
 function animeSpeedLines() {
