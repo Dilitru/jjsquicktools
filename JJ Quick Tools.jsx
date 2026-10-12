@@ -232,7 +232,7 @@ function JJQuickTools(thisObj) {
 		{category:"Automation", name:"seeLayers"},
 		{category:"Automation", name:"runAutomation"},
 		{category:"Automation", name:"runJSXFile"},
-		{category:"Version", name:"Version 101021-1121"},
+		{category:"Version", name:"Version 101226-1000"},
 
 
     ];
