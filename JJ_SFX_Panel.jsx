@@ -60,6 +60,20 @@
         return null;
     }
 
+    // Level tag: "_s" + signed dB at the very end of the name, before the extension.
+    //   Whoosh_03_s-6.wav -> -6    Hit_s3.mp3 -> 3    Hit_s+3.mp3 -> 3    Impact_s-3.5.wav -> -3.5
+    // Returns null when there is no tag. Clamped to AE's audio level range (-192 to +24 dB).
+    function parseLevel(fileName) {
+        var base = fileName.replace(/\.[^.]*$/, "");
+        var m = /_s([+-]?\d+(?:\.\d+)?)$/i.exec(base);
+        if (!m) return null;
+        var v = parseFloat(m[1]);
+        if (isNaN(v)) return null;
+        if (v < -192) v = -192;
+        if (v > 24) v = 24;
+        return v;
+    }
+
     function scanFolder(root) {
         var out = [];
         function walk(folder, category) {
@@ -76,7 +90,8 @@
                         name: nm,
                         lower: nm.toLowerCase(),
                         path: it.fsName,
-                        category: category === null ? UNCAT : category
+                        category: category === null ? UNCAT : category,
+                        level: parseLevel(nm)
                     });
                 }
             }
@@ -224,6 +239,15 @@
     }
 
     // ---------- Add / swap ----------
+    // Sets Audio Levels (dB, both channels). Skipped when the property is keyframed or driven by an expression.
+    function applyLevel(layer, level) {
+        try {
+            var prop = layer.property("ADBE Audio Group").property("ADBE Audio Levels");
+            if (prop.numKeys > 0) return;
+            prop.setValue([level, level]);
+        } catch (e) {}
+    }
+
     function addLayer(comp, footage, rec) {
         var t = comp.time;
 
@@ -238,6 +262,7 @@
         layer.startTime = t;            // in-point at the current time
         layer.name = rec.name;
         if (anchor) layer.moveBefore(anchor);   // sits directly above the selected layer
+        if (rec.level !== null) applyLevel(layer, rec.level);
         selectOnly(comp, layer);        // only the new layer is selected
     }
 
@@ -248,6 +273,7 @@
         target.startTime = oldIn;       // new sound begins at the old in-point
         target.inPoint = oldIn;
         target.outPoint = oldIn + footage.duration;
+        applyLevel(target, rec.level === null ? 0 : rec.level);
         comp.time = oldIn;              // playhead to the same spot
         selectOnly(comp, target);       // stays selected so the next double-click can swap again
     }
@@ -364,6 +390,37 @@
         setFixedWidth(ui.ddHolder, w2);
     }
 
+    // ---------- Naming note (shown before picking a folder) ----------
+    var GUIDE_TEXT =
+        "Note: You can change the default Audio Level of a file by adding _s[audio level] on the file.\n" +
+        "i.e. \"Pop_s-12\" or \"Bang_s+6\" will decrease or increase the audio level automatically.";
+
+    // Add Folder / Cancel dialog. Returns true when Add Folder is pressed.
+    function showNamingGuide() {
+        var dlg = new Window("dialog", "Add Folder");
+        dlg.orientation = "column";
+        dlg.alignChildren = ["fill", "top"];
+        dlg.margins = 12;
+        dlg.spacing = 10;
+
+        // rough height: about 48 characters fit on a line at this width
+        var lines = GUIDE_TEXT.split("\n");
+        var rows = 0;
+        for (var i = 0; i < lines.length; i++) rows += Math.ceil(lines[i].length / 48);
+        var txt = dlg.add("statictext", undefined, GUIDE_TEXT, { multiline: true });
+        txt.preferredSize = [340, rows * 16 + 8];
+
+        var btns = dlg.add("group");
+        btns.alignment = ["right", "top"];
+        btns.spacing = 8;
+        var ok = btns.add("button", undefined, "Add Folder", { name: "ok" });
+        var cancel = btns.add("button", undefined, "Cancel", { name: "cancel" });
+        ok.preferredSize = [100, 32];
+        cancel.preferredSize = [100, 32];
+
+        return dlg.show() === 1;
+    }
+
     // ---------- Build UI ----------
     function buildUI(host) {
         var win = (host instanceof Panel) ? host : new Window("palette", "JJ SFX Panel", undefined, { resizeable: true });
@@ -430,6 +487,7 @@
             applyFilter();
         };
         ui.folderBtn.onClick = function () {
+            if (!showNamingGuide()) return;     // Cancel: leave the folder as it is
             var f = Folder.selectDialog("Choose your SFX folder");
             if (f) {
                 app.settings.saveSetting(SECTION, KEY_FOLDER, f.fsName);
