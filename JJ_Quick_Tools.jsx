@@ -187,6 +187,10 @@ function JJQuickTools(thisObj) {
         {category:"Animate In", name:"Slide in from Right"},
         {category:"Animate In", name:"Slide in from Bottom"},
         {category:"Animate In", name:"Slide in from Random"},
+        {category:"Animate In", name:"Slide in from Top (Cartoonish)"},
+        {category:"Animate In", name:"Slide in from Left (Cartoonish)"},
+        {category:"Animate In", name:"Slide in from Bottom (Cartoonish)"},
+        {category:"Animate In", name:"Slide in from Right (Cartoonish)"},
 		{category:"Animate In", name:"Smooth Linear Wipe"},
         {category:"Animate In", name:"Card In"},
         {category:"Animate In", name:"Spin In"},
@@ -195,6 +199,11 @@ function JJQuickTools(thisObj) {
         {category:"Animate Out", name:"Scale Out"},
 		{category:"Animate Out", name:"Fade To Black"},
 		{category:"Animate Out", name:"Fade To White"},
+		{category:"Animate Out", name:"Slide out to Top"},
+		{category:"Animate Out", name:"Slide out to Left"},
+		{category:"Animate Out", name:"Slide out to Right"},
+		{category:"Animate Out", name:"Slide out to Bottom"},
+		{category:"Animate Out", name:"Slide out to Random"},
         {category:"Emphasis", name:"Quick Light Sweep"},
         {category:"Emphasis", name:"Slow Light Sweep"},
         {category:"Emphasis", name:"Edge Light Sweep"},
@@ -203,6 +212,10 @@ function JJQuickTools(thisObj) {
 		{category:"Emphasis", name:"Glow (Quick)"},
 		{category:"Emphasis", name:"Glow (Intense)"},
 		{category:"Emphasis", name:"Pulsing Loop"},
+        {category:"Emphasis", name:"Slide from Center"},
+        {category:"Emphasis", name:"Slide to Center"},
+        {category:"Emphasis", name:"Ripple Impact"},
+        {category:"Emphasis", name:"Camera Shake"},
         {category:"Color Control", name:"Saturation to 0"},
 		{category:"Color Control", name:"Desaturate Footage"},
 		{category:"Color Control", name:"Darken Footage"},
@@ -229,7 +242,10 @@ function JJQuickTools(thisObj) {
         {category:"Effects", name:"Lens Flare Horizontal"},
         {category:"Effects", name:"Radial Flare"},
         {category:"Effects", name:"Motion Blur Bloom"},
-        {category:"Effects", name:"Offset (Horizontal)"},
+        {category:"Effects", name:"Offset Loop (Up)"},
+        {category:"Effects", name:"Offset Loop (Down)"},
+        {category:"Effects", name:"Offset Loop (Left)"},
+        {category:"Effects", name:"Offset Loop (Right)"},
         {category:"Effects", name:"Particle Star Burst"},
         {category:"Effects", name:"Particle Sweep"},
         {category:"Effects", name:"Rainbow Refraction"},
@@ -239,6 +255,7 @@ function JJQuickTools(thisObj) {
         {category:"Effects", name:"Film Grunge"},
         {category:"Effects", name:"Bokeh Background"},
         {category:"Effects", name:"Auto Stroke Trace"},
+        {category:"Effects", name:"Quick Stroke Setup"},
         {category:"Layer Management", name:"True Layer Duplicator"},
         {category:"Layer Management", name:"Create Master Null"},
         {category:"Layer Management", name:"Create Template (Project)"},
@@ -253,7 +270,9 @@ function JJQuickTools(thisObj) {
         {category:"Collage Maker", name:"Ferris Wheel Collage"},
         {category:"Collage Maker", name:"Carousel Collage"},
         {category:"Collage Maker", name:"Film Strip Collage"},
+        {category:"Collage Maker", name:"Film Strip Collage V2"},
         {category:"Collage Maker", name:"Simple Collage"},
+        {category:"Collage Maker", name:"Film Strip Builder"},
         {category:"Storyboard Maker", name:"1 Story: Mark Audio"},
         {category:"Storyboard Maker", name:"2 Story: Rename Markers"},
         {category:"Storyboard Maker", name:"3 Story: Build Comps"},
@@ -262,7 +281,7 @@ function JJQuickTools(thisObj) {
 		{category:"Automation", name:"seeLayers"},
 		{category:"Automation", name:"runAutomation"},
 		{category:"Automation", name:"runJSXFile"},
-		{category:"Version", name:"Version 102426-2004"},
+		{category:"Version", name:"Version 111126-1801"},
 
 
     ];
@@ -282,6 +301,10 @@ function JJQuickTools(thisObj) {
         "Slide in from Left": "Slides in from the left.",
         "Slide in from Right": "Slides in from the right.",
         "Slide in from Bottom": "Slides in from below.",
+        "Slide in from Top (Cartoonish)": "Slides in with squash, trail, flash and wobble.",
+        "Slide in from Left (Cartoonish)": "Slides in with squash, trail, flash and wobble.",
+        "Slide in from Bottom (Cartoonish)": "Slides in with squash, trail, flash and wobble.",
+        "Slide in from Right (Cartoonish)": "Slides in with squash, trail, flash and wobble.",
         "Slide in from Random": "Slides in from random directions.",
         "Smooth Linear Wipe": "Soft-edged wipe reveal.",
         "Card In": "Flips up like a card with a sweep.",
@@ -291,6 +314,11 @@ function JJQuickTools(thisObj) {
         "Fade Out": "Fades out to transparent.",
         "Scale Out": "Shrinks away to nothing.",
         "Fade To Black": "Darkens down to black.",
+        "Slide out to Top": "Slides out through the top edge.",
+        "Slide out to Left": "Slides out through the left edge.",
+        "Slide out to Right": "Slides out through the right edge.",
+        "Slide out to Bottom": "Slides out through the bottom edge.",
+        "Slide out to Random": "Slides out in a random direction.",
         "Fade To White": "Brightens up to white.",
         // Emphasis
         "Quick Light Sweep": "Fast light sweep across the layer.",
@@ -300,6 +328,10 @@ function JJQuickTools(thisObj) {
         "Grow Over Time": "Slow growth with rate sliders.",
         "Glow (Quick)": "Soft glow that ramps up.",
         "Glow (Intense)": "Stronger glow that ramps up.",
+        "Slide from Center": "Slides in from the comp center.",
+        "Camera Shake": "Quick shake on an adjustment layer.",
+        "Ripple Impact": "Water-ripple distortion that fades out.",
+        "Slide to Center": "Slides out to the comp center.",
         "Pulsing Loop": "Pulses the selection on a loop.",
         // Color Control
         "Saturation to 0": "Animates to black and white.",
@@ -333,7 +365,10 @@ function JJQuickTools(thisObj) {
         "Lens Flare Horizontal": "Horizontal flare streak with a null.",
         "Radial Flare": "Starburst-style radial flare.",
         "Motion Blur Bloom": "Glowing motion blur bloom.",
-        "Offset (Horizontal)": "Shifts the layer sideways.",
+        "Offset Loop (Up)": "Seamless endless scroll upward.",
+        "Offset Loop (Down)": "Seamless endless scroll downward.",
+        "Offset Loop (Left)": "Seamless endless scroll to the left.",
+        "Offset Loop (Right)": "Seamless endless scroll to the right.",
         "Particle Star Burst": "Glowing burst of star particles.",
         "Particle Sweep": "Sweep of sparkling particles.",
         "Rainbow Refraction": "Light streak with rainbow tones.",
@@ -341,10 +376,11 @@ function JJQuickTools(thisObj) {
         "Anime Speed Lines": "Anime-style speed lines.",
         "Flower Particles": "Flower petals drifting across.",
         "Film Grunge": "Film dust and scratches.",
+        "Quick Stroke Setup": "Stroke effect with write-on keys.",
         "Auto Stroke Trace": "Traced write-on stroke for script lettering.",
         "Bokeh Background": "Warm, drifting bokeh background.",
         // Layer Management
-        "True Layer Duplicator": "Duplicates layer with nested comps.",
+        "True Layer Duplicator": "dontduplicate = stops duplication",
         "Create Master Null": "Null that controls the selection.",
         "Create Template (Project)": "Starter folders and comp.",
         "Loop Out (Cycle)": "Repeats keyframes (or Time Remap).",
@@ -359,7 +395,9 @@ function JJQuickTools(thisObj) {
         "Cross Photos Collage": "Photos in a cross layout.",
         "Ferris Wheel Collage": "Photos on a Ferris wheel.",
         "Carousel Collage": "Photos in a carousel.",
+        "Film Strip Collage V2": "Film strip for any number of pictures.",
         "Film Strip Collage": "Photos along a film strip.",
+        "Film Strip Builder": "Film strip from selected project items.",
         "Simple Collage": "Quick, simple photo collage.",
         // Storyboard Maker
         "1 Story: Mark Audio": "Marks where audio resumes.",
@@ -436,8 +474,24 @@ function JJQuickTools(thisObj) {
         }
 
         // Comp-adding tool: handles its own comp/selection checks (works with no layer selected)
+        if (toolName === "Camera Shake") {
+            cameraShake();
+            return;
+        }
+
         if (toolName === "SMAC Steps Text") {
             smacStepsText();
+            return;
+        }
+
+        // Project-panel tool: works on the selected project items, no comp or layer needed
+        if (toolName === "Film Strip Collage V2") {
+            FilmstripCollageMakerV2();
+            return;
+        }
+
+        if (toolName === "Film Strip Builder") {
+            filmStripBuilder();
             return;
         }
 
@@ -554,6 +608,9 @@ function JJQuickTools(thisObj) {
 			case "Auto Stroke Trace":
 			    autoStrokeTrace();
 		    break;
+			case "Quick Stroke Setup":
+			    quickStrokeSetup();
+		    break;
 			case "Quick Light Sweep":
 			    quickLightSweep();
 		    break;
@@ -608,8 +665,17 @@ function JJQuickTools(thisObj) {
 			case "Simple Collage":
 				SimpleCollage();
 			break;
-			case "Offset (Horizontal)":
-				offsetHorizontal();
+			case "Offset Loop (Up)":
+				offsetLoop("Up");
+			break;
+			case "Offset Loop (Down)":
+				offsetLoop("Down");
+			break;
+			case "Offset Loop (Left)":
+				offsetLoop("Left");
+			break;
+			case "Offset Loop (Right)":
+				offsetLoop("Right");
 			break;
 			case "Pulse Scale":
 				pulseScale();
@@ -649,6 +715,33 @@ function JJQuickTools(thisObj) {
 			break;
 			case "Slide in from Random":
 				SlideInFromRandom();
+			break;
+			case "Slide in from Top (Cartoonish)":
+				slideInCartoon("Top");
+			break;
+			case "Slide in from Left (Cartoonish)":
+				slideInCartoon("Left");
+			break;
+			case "Slide in from Bottom (Cartoonish)":
+				slideInCartoon("Bottom");
+			break;
+			case "Slide in from Right (Cartoonish)":
+				slideInCartoon("Right");
+			break;
+			case "Slide out to Top":
+				slideOut("Top");
+			break;
+			case "Slide out to Left":
+				slideOut("Left");
+			break;
+			case "Slide out to Right":
+				slideOut("Right");
+			break;
+			case "Slide out to Bottom":
+				slideOut("Bottom");
+			break;
+			case "Slide out to Random":
+				slideOut("Random");
 			break;
 			case "Card In":
 				CardIn();
@@ -694,6 +787,15 @@ function JJQuickTools(thisObj) {
 			break;
 			case "Pulsing Loop":
 				pulsingLoop();
+				break;
+			case "Slide from Center":
+				slideCenterMove(false);
+				break;
+			case "Slide to Center":
+				slideCenterMove(true);
+				break;
+			case "Ripple Impact":
+				rippleImpact();
 				break;
 			case "Desaturate Footage":
 				desaturateFootage();
@@ -1433,7 +1535,9 @@ function trueLayerDuplicatorClone() {
         }
 
         // Only skip duplication for nested subcomps, never for the top-level target comp
-        if (!isTopLevel && comp.name.toLowerCase().indexOf("dontduplicate") !== -1) {
+        // (comp name contains "dontduplicate" or "donotduplicate")
+        var lowerName = comp.name.toLowerCase();
+        if (!isTopLevel && (lowerName.indexOf("dontduplicate") !== -1 || lowerName.indexOf("donotduplicate") !== -1)) {
             compMap[comp.id] = comp;
             return comp;
         }
@@ -1990,91 +2094,83 @@ function BGMCompressor() {
     app.endUndoGroup();
 }
 
-	function offsetHorizontal() {
-        app.beginUndoGroup("offsetHorizontal");
+// ─────────────────────────────────────────────────────────────
+// offsetLoop(direction)   (menu: "Offset Loop (Up/Down/Left/Right)")
+//    One click on the selected layers: adds an Offset effect whose
+//    "Shift Center To" scrolls the content one full layer width (Left /
+//    Right) or height (Up / Down) over 5 s, linear, starting at the
+//    current time, with loopOut("cycle") so it scrolls forever.
+//    Locked layers are skipped. The layer is not trimmed.
+// ─────────────────────────────────────────────────────────────
+function offsetLoop(direction) {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        alert("Please select a composition.");
+        return;
+    }
 
-        var comp = app.project.activeItem;
-        if (!(comp && comp instanceof CompItem)) {
-            alert("Please select a composition.");
-            return;
-        }
+    var sel = comp.selectedLayers;
+    if (!sel || sel.length === 0) {
+        alert("Please select one or more layers.");
+        return;
+    }
 
-        var sel = comp.selectedLayers;
-        if (!sel || sel.length === 0) {
-            alert("Please select one or more layers.");
-            return;
-        }
+    var t0 = comp.time;      // starts at the current time
+    var DUR = 5.0;           // seconds for one full cycle
+    var applied = 0;
 
+    app.beginUndoGroup("Quick Tool: Offset Loop (" + direction + ")");
+    try {
         for (var i = 0; i < sel.length; i++) {
             var layer = sel[i];
+            if (layer.locked) continue;
 
-            // Add Offset effect
             var effects = layer.property("ADBE Effect Parade");
             if (!effects) continue;
             var offsetFx = effects.addProperty("ADBE Offset");
             if (!offsetFx) continue;
 
-            // Get the Shift Center To property (display name)
+            // "Shift Center To" (display name), falling back to the first property
             var shiftProp = offsetFx.property("Shift Center To");
             if (!shiftProp) {
                 shiftProp = offsetFx.property(1);
                 if (!shiftProp) continue;
             }
 
-            // Times
-            var inT = layer.inPoint;
-            var secondT = inT + 5.0;
-            if (secondT > comp.duration) secondT = comp.duration;
-
-            // X positions: 0 and layer width (use source.width if available, otherwise comp.width)
-            var layerWidth = comp.width;
+            // Layer size: source size if available, otherwise comp size
+            var w = comp.width, h = comp.height;
             try {
                 if (layer.source && typeof layer.source.width === "number") {
-                    layerWidth = layer.source.width;
+                    w = layer.source.width;
+                    h = layer.source.height;
                 }
-            } catch (e) {
-                layerWidth = comp.width;
-            }
-            var x0 = 0;
-            var x1 = layerWidth;
+            } catch (e) {}
 
-            // Y position: half the source height if available, otherwise half the comp height
-            var layerHeight = comp.height;
+            // Content moves in the direction the Shift Center To value increases
+            var from, to;
+            if (direction === "Right")      { from = [0, h / 2]; to = [w, h / 2]; }
+            else if (direction === "Left")  { from = [w, h / 2]; to = [0, h / 2]; }
+            else if (direction === "Down")  { from = [w / 2, 0]; to = [w / 2, h]; }
+            else                            { from = [w / 2, h]; to = [w / 2, 0]; }   // Up
+
+            shiftProp.setValueAtTime(t0, from);
+            shiftProp.setValueAtTime(t0 + DUR, to);
+
             try {
-                if (layer.source && typeof layer.source.height === "number") {
-                    layerHeight = layer.source.height;
-                }
-            } catch (e) {
-                layerHeight = comp.height;
-            }
-            var y = layerHeight / 2;
-
-            // Set keyframe at inPoint
-            shiftProp.setValueAtTime(inT, [x0, y]);
-
-            // Set keyframe 5 seconds after inPoint (clamped)
-            shiftProp.setValueAtTime(secondT, [x1, y]);
-
-            // Make keyframes linear if supported
-            try {
-                var kfCount = shiftProp.numKeys;
-                for (var k = 1; k <= kfCount; k++) {
+                for (var k = 1; k <= shiftProp.numKeys; k++) {
                     shiftProp.setInterpolationTypeAtKey(k, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
                 }
-            } catch (e) {
-                // ignore if property doesn't support interpolation settings
-            }
+            } catch (e) {}
 
-            // Add loopOut expression to the property
-            try {
-                shiftProp.expression = "loopOut()";
-            } catch (e) {
-                // ignore if expression cannot be set
-            }
+            try { shiftProp.expression = 'loopOut("cycle")'; } catch (e) {}
+            applied++;
         }
-
+    } finally {
         app.endUndoGroup();
     }
+
+    if (applied === 0) alert("No unlocked layers were selected.");
+}
 	
 function pulseScale() {
         app.beginUndoGroup("pulseScale");
@@ -3185,13 +3281,17 @@ function FadeIn() {
             var opacity = layer.property("Transform").property("Opacity");
 
             if (opacity) {
+                // Fade up to the layer's current opacity (read BEFORE adding keys)
+                var target = opacity.valueAtTime(t, false);
+                if (target <= 0) target = 100;   // already at 0: fall back to full opacity
+
                 // Add keyframes
                 var k1 = opacity.addKey(t);
                 var k2 = opacity.addKey(t + 0.5);
 
                 // Assign values
                 opacity.setValueAtKey(k1, 0);
-                opacity.setValueAtKey(k2, 100);
+                opacity.setValueAtKey(k2, target);
 
                 // Set interpolation type
                 opacity.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
@@ -3992,15 +4092,16 @@ function FilmstripCollageMaker() {
     }
 
     var timestamp = new Date().getTime();
+    var DUR = 300;   // every comp is 5 minutes long so nothing cuts off early
 
-    // Create main comp (4K, 30s long)
-    var mainComp = proj.items.addComp("Film strip " + timestamp, 3840, 2160, 1, 30, 30);
+    // Create main comp (4K, 5 min long)
+    var mainComp = proj.items.addComp("Film strip " + timestamp, 3840, 2160, 1, DUR, 30);
 
     // === Create Film background comp once ===
-    var filmBgComp = proj.items.addComp("Film background", 1920, 1080, 1, 30, 30);
+    var filmBgComp = proj.items.addComp("Film background", 1920, 1080, 1, DUR, 30);
 
     // White background
-    var bg = filmBgComp.layers.addSolid([1,1,1], "Background", 1920, 1080, 1);
+    var bg = filmBgComp.layers.addSolid([1,1,1], "Background", 1920, 1080, 1, DUR);
 
     // Side holes: black shapes
     var holesLayer = filmBgComp.layers.addShape();
@@ -4038,13 +4139,13 @@ function FilmstripCollageMaker() {
         if (!(footage instanceof FootageItem)) continue;
 
         // Create Film section comp (unique per footage)
-        var filmSection = proj.items.addComp("Film section_" + i, 1920, 1080, 1, 30, 30);
+        var filmSection = proj.items.addComp("Film section_" + i, 1920, 1080, 1, DUR, 30);
 
         // Drop Film background comp inside
         filmSection.layers.add(filmBgComp);
 
         // Create Container subcomp (1600x900)
-        var containerComp = proj.items.addComp("Container_" + i, 1600, 900, 1, 30, 30);
+        var containerComp = proj.items.addComp("Container_" + i, 1600, 900, 1, DUR, 30);
 
         // Rounded rectangle shape (mask)
         var shapeLayer = containerComp.layers.addShape();
@@ -4083,7 +4184,7 @@ function FilmstripCollageMaker() {
     }
 
     // === Animation Step ===
-    var masterNull = mainComp.layers.addNull();
+    var masterNull = mainComp.layers.addNull(DUR);
     masterNull.name = "Filmstrip_Controller";
 
     for (var j = 0; j < sectionLayers.length; j++) {
@@ -4095,7 +4196,7 @@ function FilmstripCollageMaker() {
     var endX = 1080 - ((1920 * selItems.length) - 2160);
 
     posProp.setValueAtTime(0, [startX, 1080, 0]);
-    posProp.setValueAtTime(30, [endX, 1080, 0]);
+    posProp.setValueAtTime(30, [endX, 1080, 0]);   // keyframes keep their 30 s duration
 
     // === Add Film strip comp as a layer in the currently active comp ===
     if (proj.activeItem instanceof CompItem) {
@@ -4106,6 +4207,146 @@ function FilmstripCollageMaker() {
 
     app.endUndoGroup();
 }
+
+// ─────────────────────────────────────────────────────────────
+// FilmstripCollageMakerV2   (menu: "Film Strip Collage V2")
+//    Select any number of footage items (images/videos) in the PROJECT panel.
+//    Every comp and layer is 10 minutes long. A master null scrolls the whole
+//    strip from right to left over 5 minutes (linear, so speed follows from the
+//    distance), with a definite start (strip just off-screen right) and a
+//    definite stop (last picture centered). It then holds for the rest of the
+//    comp. Videos shorter than 10 minutes are looped with time remap.
+//    Layout math: master null anchor = (0,0), so a section's world x =
+//    null x + its child position. Section i sits at child x = 960 + 1920*i.
+//      start null x = 3840                 (first section just right of the frame)
+//      end   null x = 2880 - 1920 * count  (last section centered at x = 1920)
+// ─────────────────────────────────────────────────────────────
+function FilmstripCollageMakerV2() {
+    var proj = app.project;
+    var selItems = proj.selection;
+
+    // Valid footage only; no limit on how many
+    var footageItems = [];
+    for (var s = 0; s < selItems.length; s++) {
+        if (selItems[s] instanceof FootageItem) footageItems.push(selItems[s]);
+    }
+    if (footageItems.length < 1) {
+        alert("Please select one or more footage items (images/videos) in the Project panel.");
+        return;
+    }
+
+    var DUR = 600;          // every comp and layer: 10 minutes
+    var MOVE_DUR = 300;     // the scroll takes 5 minutes
+    var FPS = 30;
+    var count = footageItems.length;
+    var timestamp = new Date().getTime();
+
+    app.beginUndoGroup("Filmstrip Collage Maker V2");
+    try {
+        // Main comp (4K)
+        var mainComp = proj.items.addComp("Film strip V2 " + timestamp, 3840, 2160, 1, DUR, FPS);
+
+        // === Film background comp (shared by every section) ===
+        var filmBgComp = proj.items.addComp("Film background V2 " + timestamp, 1920, 1080, 1, DUR, FPS);
+        var bg = filmBgComp.layers.addSolid([1, 1, 1], "Background", 1920, 1080, 1, DUR);
+
+        var holesLayer = filmBgComp.layers.addShape();
+        holesLayer.name = "Side Holes";
+        holesLayer.property("Transform").property("Position").setValue([0, 0]);
+        var contents = holesLayer.property("Contents");
+
+        var leftRect = contents.addProperty("ADBE Vector Shape - Rect");
+        leftRect.property("Size").setValue([120, 880]);
+        leftRect.property("Position").setValue([0, 540]);
+        leftRect.property("Roundness").setValue(250);
+
+        var rightRect = contents.addProperty("ADBE Vector Shape - Rect");
+        rightRect.property("Size").setValue([120, 880]);
+        rightRect.property("Position").setValue([1920, 540]);
+        rightRect.property("Roundness").setValue(250);
+
+        var fill = contents.addProperty("ADBE Vector Graphic - Fill");
+        fill.property("Color").setValue([0, 0, 0]);
+
+        // Holes act as an inverted alpha matte for the background
+        holesLayer.moveBefore(bg);
+        bg.trackMatteType = TrackMatteType.ALPHA_INVERTED;
+
+        // === One section per picture ===
+        var sectionLayers = [];
+        for (var i = 0; i < count; i++) {
+            var footage = footageItems[i];
+
+            var filmSection = proj.items.addComp("Film section V2_" + i, 1920, 1080, 1, DUR, FPS);
+            filmSection.layers.add(filmBgComp);
+
+            var containerComp = proj.items.addComp("Container V2_" + i, 1600, 900, 1, DUR, FPS);
+
+            var shapeLayer = containerComp.layers.addShape();
+            shapeLayer.name = "Mask Shape";
+            var rectGroup = shapeLayer.property("Contents").addProperty("ADBE Vector Shape - Rect");
+            rectGroup.property("Size").setValue([1600, 900]);
+            rectGroup.property("Position").setValue([0, 0]);
+            rectGroup.property("Roundness").setValue(50);
+            var fill2 = shapeLayer.property("Contents").addProperty("ADBE Vector Graphic - Fill");
+            fill2.property("Color").setValue([1, 1, 1]);
+
+            var footageLayer = containerComp.layers.add(footage);
+            if (footage.width > 0) {
+                var scaleFactor = (1600 / footage.width) * 100;   // fit width
+                footageLayer.property("Transform").property("Scale").setValue([scaleFactor, scaleFactor]);
+            }
+
+            // Videos shorter than the comp: loop them for the full 10 minutes
+            if (footage.duration > 0 && footage.duration < DUR) {
+                try {
+                    footageLayer.timeRemapEnabled = true;
+                    footageLayer.outPoint = DUR;
+                    footageLayer.property("ADBE Time Remapping").expression = 'loopOut("cycle")';
+                } catch (e) {}
+            }
+
+            shapeLayer.moveBefore(footageLayer);
+            footageLayer.trackMatteType = TrackMatteType.ALPHA;
+
+            var containerLayer = filmSection.layers.add(containerComp);
+            containerLayer.property("Transform").property("Position").setValue([960, 540, 0]);
+
+            // Section i: child x = 960 + 1920*i, child y = 0 (the null carries y = 1080)
+            var sectionLayer = mainComp.layers.add(filmSection);
+            sectionLayer.property("Transform").property("Position").setValue([960 + 1920 * i, 0, 0]);
+            sectionLayers.push(sectionLayer);
+        }
+
+        // === Master null: right to left over 5 minutes, definite start and stop ===
+        var masterNull = mainComp.layers.addNull(DUR);
+        masterNull.name = "Filmstrip_Controller";
+        var nullTx = masterNull.property("Transform");
+        nullTx.property("Anchor Point").setValue([0, 0, 0]);   // child positions are plain offsets from the null
+
+        for (var j = 0; j < sectionLayers.length; j++) {
+            sectionLayers[j].parent = masterNull;
+        }
+
+        var startX = 3840;                    // first section's left edge at the right edge of the frame
+        var endX = 2880 - 1920 * count;       // last section centered in the frame
+        var posProp = nullTx.property("Position");
+        posProp.setValueAtTime(0, [startX, 1080, 0]);
+        posProp.setValueAtTime(MOVE_DUR, [endX, 1080, 0]);
+        for (var k = 1; k <= posProp.numKeys; k++) {
+            posProp.setInterpolationTypeAtKey(k, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+        }
+
+        // === Add the strip to the active comp at the current time ===
+        if (proj.activeItem instanceof CompItem) {
+            var filmLayer = proj.activeItem.layers.add(mainComp);
+            filmLayer.startTime = proj.activeItem.time;
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
 
 // JJ Quick Tool Extensions
 // Adds See Comp, See Layers, and Run Automation
@@ -4553,6 +4794,222 @@ function SlideInFromRandom() {
         app.endUndoGroup();
     }
 }
+
+// ─────────────────────────────────────────────────────────────
+// slideOut(direction)   (menu: "Slide out to Top/Left/Right/Bottom/Random")
+//    Selected layers slide off the comp edge in 0.5 s, ENDING at the
+//    current time (like the other Animate Out tools). Auto-trim respected:
+//    when on, the layer's out point is trimmed to the current time.
+//    Ease is the reverse of the slide-ins (slow departure, quick exit).
+//    Locked layers are skipped.
+// ─────────────────────────────────────────────────────────────
+// slideInCartoon(direction)   (menu: "Slide in from Top/Left/Bottom/Right (Cartoonish)")
+//    One click. Precomposes all selected (unlocked) layers, then wraps that
+//    precomp in a second "motion" comp. Inside the motion comp the precomp
+//    does the standard 0.5 s slide in (same keys and ease as Slide in from
+//    ...), plus squash and stretch: stretched while travelling, squashed on
+//    landing. Position overshoots then settles, the layer wobbles (damped
+//    rotation), a quick white flash fires on impact (Color Balance (HLS)
+//    Lightness) and an "Impact" marker is added on the layer. The trail is real motion blur: the motion comp's
+//    shutter samples only the past (Phase = -Angle), so the tail follows the
+//    layer while the leading edge stays sharp. Cheap; raise the motion comp's
+//    Advanced > Samples Per Frame for a smoother tail.
+//    Auto-trim is respected (in point of the wrapper layer = current time).
+// ─────────────────────────────────────────────────────────────
+function slideInCartoon(direction) {
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    // unlocked selected layers
+    var sel = comp.selectedLayers, idx = [];
+    for (var i = 0; i < sel.length; i++) {
+        if (!sel[i].locked) idx.push(sel[i].index);
+    }
+    if (idx.length === 0) { alert("Select at least one unlocked layer."); return; }
+
+    var t = comp.time;
+    var vertical = (direction === "Top" || direction === "Bottom");
+
+    app.beginUndoGroup("Slide In " + direction + " (Cartoonish)");
+    try {
+        // 1) Precompose the selected layers, then wrap that precomp layer in a motion comp
+        var content = comp.layers.precompose(idx, "Slide Content", true);
+        var contentLayerIndex = 0;
+        for (var a = 1; a <= comp.numLayers; a++) {
+            if (comp.layer(a).source === content) { contentLayerIndex = a; break; }
+        }
+        if (contentLayerIndex === 0) throw new Error("Could not find the new precomp layer.");
+
+        var motion = comp.layers.precompose([contentLayerIndex], "Slide " + direction + " (Cartoonish)", true);
+        var wrapLayer = null;
+        for (var b = 1; b <= comp.numLayers; b++) {
+            if (comp.layer(b).source === motion) { wrapLayer = comp.layer(b); break; }
+        }
+        if (!wrapLayer) throw new Error("Could not find the motion comp layer.");
+
+        // 2) Motion comp: trailing-only motion blur
+        try { motion.motionBlur = true; } catch (e1) {}
+        try { motion.shutterAngle = 360; } catch (e2) {}
+        try { motion.shutterPhase = -360; } catch (e3) {}            // samples only the past: tail, sharp front
+        try { motion.motionBlurSamplesPerFrame = 32; } catch (e4) {}
+
+        // 3) Animate the content layer inside the motion comp
+        var inner = motion.layer(1);
+        try { inner.motionBlur = true; } catch (e5) {}
+
+        var w = motion.width, h = motion.height;
+        var pos = inner.property("ADBE Transform Group").property("ADBE Position");
+        var scl = inner.property("ADBE Transform Group").property("ADBE Scale");
+        var fin = pos.value;
+        var start = fin.slice(0);
+        if (direction === "Top")         start[1] = fin[1] - h;
+        else if (direction === "Bottom") start[1] = fin[1] + h;
+        else if (direction === "Left")   start[0] = fin[0] - w;
+        else                             start[0] = fin[0] + w;           // Right
+
+        // Slide in (0.5 s, same ease pairing as the other slide-ins), overshoot past the
+        // landing point, then settle back
+        var axis = vertical ? 1 : 0;
+        var sign = (direction === "Top" || direction === "Left") ? 1 : -1;   // keep going the way it moved
+        var over = fin.slice(0);
+        over[axis] = fin[axis] + sign * (vertical ? h : w) * 0.04;
+        pos.setValueAtTime(t, start);
+        pos.setValueAtTime(t + 0.5, over);   // impact
+        pos.setValueAtTime(t + 0.7, fin);
+        var p1 = pos.nearestKeyIndex(t), p2 = pos.nearestKeyIndex(t + 0.5), p3 = pos.nearestKeyIndex(t + 0.7);
+        pos.setInterpolationTypeAtKey(p1, KeyframeInterpolationType.BEZIER);
+        pos.setInterpolationTypeAtKey(p2, KeyframeInterpolationType.BEZIER);
+        pos.setInterpolationTypeAtKey(p3, KeyframeInterpolationType.BEZIER);
+        var easeOut = new KeyframeEase(0, 30);
+        var easeIn = new KeyframeEase(0, 100);
+        var easeEasy = new KeyframeEase(0, 33.333);
+        pos.setTemporalEaseAtKey(p1, [easeOut], [easeOut]);
+        pos.setTemporalEaseAtKey(p2, [easeIn], [easeEasy]);
+        pos.setTemporalEaseAtKey(p3, [easeIn], [easeIn]);
+
+        // Squash and stretch along the slide axis (about the layer's anchor)
+        var curS = scl.value;
+        function sv(along, perp) {
+            var v = curS.slice(0);
+            v[vertical ? 1 : 0] = along;
+            v[vertical ? 0 : 1] = perp;
+            return v;
+        }
+        var times = [t, t + 0.2, t + 0.5, t + 0.65, t + 0.8];
+        var vals = [sv(100, 100), sv(125, 82), sv(78, 122), sv(106, 96), sv(100, 100)];
+        for (var k = 0; k < times.length; k++) scl.setValueAtTime(times[k], vals[k]);
+        var dims = scl.value.length;
+        for (var m = 0; m < times.length; m++) {
+            var ki = scl.nearestKeyIndex(times[m]);
+            var ein = [], eout = [];
+            for (var d = 0; d < dims; d++) {
+                ein.push(new KeyframeEase(0, 33.333));
+                eout.push(new KeyframeEase(0, 33.333));
+            }
+            scl.setInterpolationTypeAtKey(ki, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            scl.setTemporalEaseAtKey(ki, ein, eout);
+        }
+
+        // Wobble after landing: damped rotation (pivots about the layer anchor)
+        var rot = inner.property("ADBE Transform Group").property("ADBE Rotate Z");
+        var r0 = rot.value;
+        var wTimes = [t + 0.5, t + 0.58, t + 0.66, t + 0.74, t + 0.82, t + 0.9];
+        var wVals = [r0, r0 + 4, r0 - 3, r0 + 2, r0 - 1, r0];
+        for (var q = 0; q < wTimes.length; q++) rot.setValueAtTime(wTimes[q], wVals[q]);
+        for (var q2 = 1; q2 <= rot.numKeys; q2++) {
+            rot.setInterpolationTypeAtKey(q2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            rot.setTemporalEaseAtKey(q2, [new KeyframeEase(0, 33.333)], [new KeyframeEase(0, 33.333)]);
+        }
+
+        // White flash on impact: Color Balance (HLS) Lightness 0 -> 100 -> 0 as it lands
+        var hls = inner.property("ADBE Effect Parade").addProperty("ADBE Color Balance (HLS)");
+        hls.name = "Impact Flash";
+        var light = hls.property("ADBE Color Balance (HLS)-0002");   // Lightness
+        light.setValueAtTime(t + 0.45, 0);
+        light.setValueAtTime(t + 0.5, 100);
+        light.setValueAtTime(t + 0.6, 0);
+        for (var f = 1; f <= light.numKeys; f++) {
+            light.setInterpolationTypeAtKey(f, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+        }
+
+        // Impact marker on the layer (not the timeline), for dropping a sound effect
+        wrapLayer.property("Marker").setValueAtTime(t + 0.5, new MarkerValue("Impact"));
+
+        // 4) Auto-trim (honors the toggle) and leave the new layer selected
+        qtTrimIn(wrapLayer, t);
+        for (var c = 1; c <= comp.numLayers; c++) comp.layer(c).selected = false;
+        wrapLayer.selected = true;
+    } catch (err) {
+        alert("Slide In (Cartoonish) error: " + err.toString() + "\nLine: " + err.line);
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+function slideOut(direction) {
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length < 1) { alert("Please select at least one layer."); return; }
+
+    var t = comp.time;
+    var dur = 0.5;
+    var tStart = t - dur;   // slide ENDS at the current time
+    var compDiagonal = Math.sqrt(Math.pow(comp.width, 2) + Math.pow(comp.height, 2));
+    var failed = 0;
+
+    app.beginUndoGroup("Slide Out " + direction);
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) { continue; }
+
+            var pos = layer.property("Transform").property("Position");
+            if (!pos) { continue; }
+
+            try {
+                qtTrimOut(layer, t);   // honors the Auto-trim toggle
+
+                var startPos = pos.valueAtTime(tStart, false);   // read BEFORE adding keys
+                var size = getScaledSize(layer);
+                var endPos = startPos.slice(0);                   // keeps Z for 3D layers
+
+                if (direction === "Top")         { endPos[1] = -size[1] / 2; }
+                else if (direction === "Bottom") { endPos[1] = comp.height + size[1] / 2; }
+                else if (direction === "Left")   { endPos[0] = -size[0] / 2; }
+                else if (direction === "Right")  { endPos[0] = comp.width + size[0] / 2; }
+                else {   // Random
+                    var ang = Math.random() * Math.PI * 2;
+                    var dist = compDiagonal / 2 + Math.max(size[0], size[1]) + 200;
+                    endPos[0] = startPos[0] + Math.cos(ang) * dist;
+                    endPos[1] = startPos[1] + Math.sin(ang) * dist;
+                }
+
+                pos.setValueAtTime(tStart, startPos);
+                pos.setValueAtTime(t, endPos);
+
+                var k1 = pos.nearestKeyIndex(tStart);
+                var k2 = pos.nearestKeyIndex(t);
+                pos.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER);
+                pos.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER);
+
+                var slowStart = new KeyframeEase(0, 100);   // gentle departure
+                var fastEnd   = new KeyframeEase(0, 30);    // quick exit
+                pos.setTemporalEaseAtKey(k1, [slowStart], [slowStart]);
+                pos.setTemporalEaseAtKey(k2, [fastEnd], [fastEnd]);
+            } catch (e) {
+                failed++;
+            }
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+
+    if (failed > 0) alert(failed + " layer(s) could not be animated (e.g. separated or expression-driven Position).");
+}
+
 
 function CardIn() {
     var comp = app.project.activeItem;
@@ -5551,6 +6008,222 @@ function echoText() {
     newLayer.selected = true;
 
     app.endUndoGroup();
+}
+
+// ─────────────────────────────────────────────────────────────
+// cameraShake   (menu: "Camera Shake")
+//    One click. Adds an adjustment layer with a Transform effect above the
+//    topmost selected layer (or on top of the comp when nothing is selected).
+//    The shake runs 0.25 s from the current time and fades out: Position and
+//    Rotation keyframes (plain linear keys, no expressions) plus a small Scale
+//    bump so the edges never show. The adjustment layer is trimmed to the
+//    shake (in = current time, out = +0.25 s); Auto-trim is ignored on purpose.
+// ─────────────────────────────────────────────────────────────
+function cameraShake() {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    // topmost selected layer (read BEFORE adding)
+    var topSel = null, sel = comp.selectedLayers;
+    for (var i = 0; i < sel.length; i++) {
+        if (!topSel || sel[i].index < topSel.index) topSel = sel[i];
+    }
+
+    var t = comp.time;
+    var SHAKE = 0.25;                                      // seconds
+    var n = Math.max(6, Math.round(SHAKE / comp.frameDuration));   // about one key per frame
+    var step = SHAKE / n;
+
+    // shake size scales with the comp
+    var ampX = comp.width * 0.008;
+    var ampY = comp.height * 0.012;
+    var ampR = 1.2;                                        // degrees
+    var patX = [1, 0.8, 1.1, 0.7];
+    var patY = [0.9, 1.1, 0.75];
+
+    app.beginUndoGroup("Quick Tool: Camera Shake");
+    try {
+        var adj = comp.layers.addSolid([1, 1, 1], "Camera Shake", comp.width, comp.height, comp.pixelAspect, comp.duration);
+        adj.adjustmentLayer = true;
+        if (topSel) adj.moveBefore(topSel); else adj.moveToBeginning();
+
+        // trim to the shake (ignores the Auto-trim toggle)
+        adj.inPoint = t;
+        adj.outPoint = t + SHAKE;
+
+        var fx = adj.property("ADBE Effect Parade").addProperty("ADBE Geometry2");
+        fx.name = "Camera Shake";
+        var pos = fx.property("ADBE Geometry2-0002");        // Position
+        var scl = fx.property("ADBE Geometry2-0003");        // Scale
+        var rot = null;
+        for (var p = 1; p <= fx.numProperties; p++) {
+            if (fx.property(p).name === "Rotation") { rot = fx.property(p); break; }
+        }
+
+        var base = pos.value;
+        for (var k = 0; k <= n; k++) {
+            var decay = 1 - k / n;                           // first and last keys sit at rest
+            var sx = (k % 2 === 0) ? 1 : -1;
+            var sy = (k % 2 === 0) ? -1 : 1;
+            var tk = t + k * step;
+            pos.setValueAtTime(tk, [base[0] + sx * ampX * decay * patX[k % 4],
+                                    base[1] + sy * ampY * decay * patY[k % 3]]);
+            if (rot) rot.setValueAtTime(tk, ((k % 2 === 0) ? -1 : 1) * ampR * decay);
+        }
+
+        // small scale bump so the shifted edges never show
+        scl.setValueAtTime(t, 100);
+        scl.setValueAtTime(t + step, 104);
+        scl.setValueAtTime(t + SHAKE - step, 104);
+        scl.setValueAtTime(t + SHAKE, 100);
+
+        for (var s = 0; s < sel.length; s++) sel[s].selected = false;
+        adj.selected = true;
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// rippleImpact   (menu: "Ripple Impact")
+//    One click on the selected layers: adds a Ripple effect that spreads
+//    out from the layer center like a water-drop impact, starting at the
+//    current time. Radius grows 0 -> corner distance over 0.5 s while Wave
+//    Height decays 30 -> 0 over 1 s (easy ease). Locked layers are skipped.
+//    Properties are looked up by match name, falling back to display name.
+// ─────────────────────────────────────────────────────────────
+function rippleImpact() {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("Select a layer first."); return; }
+
+    var t = comp.time;
+    var applied = 0, failed = 0;
+
+    function getProp(fx, matchName, displayName) {
+        var p = fx.property(matchName);
+        if (!p) p = fx.property(displayName);
+        return p;
+    }
+    function easy(prop) {
+        for (var k = 1; k <= prop.numKeys; k++) {
+            prop.setInterpolationTypeAtKey(k, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            prop.setTemporalEaseAtKey(k, [new KeyframeEase(0, 33.333)], [new KeyframeEase(0, 33.333)]);
+        }
+    }
+
+    app.beginUndoGroup("Quick Tool: Ripple Impact");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) continue;
+
+            try {
+                var fx = layer.property("ADBE Effect Parade").addProperty("ADBE Ripple");
+                if (!fx) { failed++; continue; }
+                fx.name = "Ripple Impact";
+
+                var radius = getProp(fx, "ADBE Ripple-0001", "Radius");
+                var speed  = getProp(fx, "ADBE Ripple-0004", "Wave Speed");
+                var width  = getProp(fx, "ADBE Ripple-0005", "Wave Width");
+                var height = getProp(fx, "ADBE Ripple-0006", "Wave Height");
+
+                var lw = layer.width, lh = layer.height;
+                var reach = Math.sqrt(lw * lw + lh * lh) / 2;   // center to corner
+
+                speed.setValue(3);
+                width.setValue(60);
+
+                radius.setValueAtTime(t, 0);
+                radius.setValueAtTime(t + 0.5, reach);
+                easy(radius);
+
+                height.setValueAtTime(t, 30);
+                height.setValueAtTime(t + 1, 0);
+                easy(height);
+
+                applied++;
+            } catch (e) {
+                failed++;
+            }
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+
+    if (failed > 0) alert("Ripple Impact could not be applied to " + failed + " layer(s).");
+}
+
+// ─────────────────────────────────────────────────────────────
+// slideCenterMove(toCenter)
+//    "Slide from Center": each selected layer slides from the comp center
+//    to its current position, starting at the current time.
+//    "Slide to Center": slides from its current position to the comp
+//    center, starting at the current time. 1 s, default Easy Ease.
+//    Layers that are locked or have a parent are skipped.
+// ─────────────────────────────────────────────────────────────
+function slideCenterMove(toCenter) {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("Select a layer first."); return; }
+
+    var t = comp.time;
+    var DUR = 1;                       // seconds
+    var cx = comp.width / 2, cy = comp.height / 2;
+    var skipped = 0, failed = 0;
+
+    // key a -> b at t and t + DUR with default Easy Ease
+    function slideProp(prop, a, b) {
+        prop.setValueAtTime(t, a);
+        prop.setValueAtTime(t + DUR, b);
+        var dims = prop.isSpatial ? 1 : ((a instanceof Array) ? a.length : 1);
+        var idx = [prop.nearestKeyIndex(t), prop.nearestKeyIndex(t + DUR)];
+        for (var k = 0; k < idx.length; k++) {
+            var ein = [], eout = [];
+            for (var d = 0; d < dims; d++) {
+                ein.push(new KeyframeEase(0, 33.333));
+                eout.push(new KeyframeEase(0, 33.333));
+            }
+            prop.setInterpolationTypeAtKey(idx[k], KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            prop.setTemporalEaseAtKey(idx[k], ein, eout);
+        }
+    }
+
+    app.beginUndoGroup(toCenter ? "Quick Tool: Slide to Center" : "Quick Tool: Slide from Center");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked || layer.parent) { skipped++; continue; }
+
+            try {
+                var tg = layer.property("ADBE Transform Group");
+                var pos = tg.property("ADBE Position");
+
+                if (pos.dimensionsSeparated) {
+                    var px = tg.property("ADBE Position_0"), py = tg.property("ADBE Position_1");
+                    var curX = px.valueAtTime(t, false), curY = py.valueAtTime(t, false);
+                    slideProp(px, toCenter ? curX : cx, toCenter ? cx : curX);
+                    slideProp(py, toCenter ? curY : cy, toCenter ? cy : curY);
+                } else {
+                    var cur = pos.valueAtTime(t, false);
+                    var ctr = (cur.length > 2) ? [cx, cy, cur[2]] : [cx, cy];
+                    slideProp(pos, toCenter ? cur : ctr, toCenter ? ctr : cur);
+                }
+            } catch (e) {
+                failed++;
+            }
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+
+    if (skipped > 0 || failed > 0) {
+        alert("Some layers were not moved.\nSkipped (locked or parented): " + skipped + "\nFailed (e.g. position has an expression): " + failed);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -7787,6 +8460,303 @@ function gameWinText() {
     app.endUndoGroup();
     comp_C1.openInViewer();
     alert("RECREATED FROM LATEST DUMP WITH REAL TARGET + SHARED MATTE WORKAROUND\n\nDepth 4 RSC2 Linear Wipe\nDepth 3 PC1 10 layers\nDepth 2 PC2 5 layers\nDepth 1 RSC1: 11 layers - 5x PC2 matte copies + 5 solids ALPHA matted by PC2 + 1 visible PC2\nDepth 0 Comp1 GAME WIN!\n\nAll A-E now matted by Pre-comp 2 but Pre-comp 2 stays visible");
+}
+
+// ─────────────────────────────────────────────────────────────
+// quickStrokeSetup   (menu: "Quick Stroke Setup")
+//    One click on the selected layers (usually a solid with masks): adds
+//    the Stroke effect with the same setup Auto Stroke Trace uses, and the
+//    End keyframes already on it: 0 -> 100% over 5 s from the current time.
+//    2+ masks: All Masks + Stroke Sequentially. 1 mask: Path = Mask 1.
+//    Paint Style On Transparent, Brush Size 45. Locked layers are skipped.
+//    Properties are looked up by match name, falling back to display name.
+// ─────────────────────────────────────────────────────────────
+function quickStrokeSetup() {
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) { alert("Please select a comp."); return; }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) { alert("Select a layer first."); return; }
+
+    var t0 = comp.time;      // write-on starts at the current time
+    var DURATION = 5;        // seconds, same as Auto Stroke Trace
+    var failed = 0;
+
+    function getProp(fx, matchName, displayName) {
+        var p = fx.property(matchName);
+        if (!p) p = fx.property(displayName);
+        return p;
+    }
+
+    app.beginUndoGroup("Quick Tool: Quick Stroke Setup");
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (layer.locked) continue;
+
+            try {
+                var masks = layer.property("ADBE Mask Parade");
+                var maskCount = masks ? masks.numProperties : 0;
+
+                var stroke = layer.property("ADBE Effect Parade").addProperty("ADBE Stroke");
+                if (!stroke) { failed++; continue; }
+
+                if (maskCount > 1) {
+                    getProp(stroke, "ADBE Stroke-0002", "All Masks").setValue(1);
+                    getProp(stroke, "ADBE Stroke-0003", "Stroke Sequentially").setValue(1);
+                } else if (maskCount === 1) {
+                    getProp(stroke, "ADBE Stroke-0001", "Path").setValue(1);
+                }
+                getProp(stroke, "ADBE Stroke-0005", "Brush Size").setValue(45);
+                getProp(stroke, "ADBE Stroke-0011", "Paint Style").setValue(2);   // On Transparent
+
+                var end = getProp(stroke, "ADBE Stroke-0009", "End");
+                end.setValueAtTime(t0, 0);
+                end.setValueAtTime(t0 + DURATION, 100);
+            } catch (e) {
+                failed++;
+            }
+        }
+    } finally {
+        app.endUndoGroup();
+    }
+
+    if (failed > 0) alert("Quick Stroke Setup could not be applied to " + failed + " layer(s).");
+}
+
+// ─────────────────────────────────────────────────────────────
+// filmStripBuilder   (menu: "Film Strip Builder")
+//    Select up to 10 footage/images in the PROJECT panel. Builds one long
+//    horizontal film strip comp (cycling the sources to fill 10 frames),
+//    adds it to the active comp and applies CC Lens (Size 400, Convergence 100).
+// ─────────────────────────────────────────────────────────────
+function fsbCreateSilhouette(longComp, numFrames, cellW, cellH, numPerfsPerCell) {
+    var sideBorder = cellW * 0.025;
+    var topBottomBorder = cellH * 0.155;
+    var apertureW = cellW - (sideBorder * 2);
+    var apertureH = cellH - (topBottomBorder * 2);
+    var perfW = cellW * 0.067;
+    var perfH = topBottomBorder * 0.62;
+    var perfRound = perfW * 0.22;
+
+    var shapeLayer = longComp.layers.addShape();
+    shapeLayer.name = "Film Silhouette - LONG";
+    
+    var contents = shapeLayer.property("ADBE Root Vectors Group");
+    var filmGroup = contents.addProperty("ADBE Vector Group");
+    filmGroup.name = "Film Group";
+    var gc = filmGroup.property("ADBE Vectors Group");
+
+    var totalW = longComp.width;
+    var totalH = longComp.height;
+
+    // Outer
+    var outer = gc.addProperty("ADBE Vector Shape - Rect");
+    outer.property("ADBE Vector Rect Size").setValue([totalW, totalH]);
+    outer.property("ADBE Vector Rect Position").setValue([0, 0]);
+
+    // For each frame, add aperture hole
+    for (var f = 0; f < numFrames; f++) {
+        var centerX = -totalW/2 + cellW/2 + f * cellW;
+        var ap = gc.addProperty("ADBE Vector Shape - Rect");
+        ap.name = "Aperture " + (f+1);
+        ap.property("ADBE Vector Rect Size").setValue([apertureW, apertureH]);
+        ap.property("ADBE Vector Rect Position").setValue([centerX, 0]);
+    }
+
+    // Perfs - across entire strip
+    var totalPerfs = numFrames * numPerfsPerCell;
+    var spacing = totalW / totalPerfs;
+    for (var p = 0; p < totalPerfs; p++) {
+        var xPos = -totalW/2 + spacing/2 + p * spacing;
+        var yTop = -totalH/2 + topBottomBorder/2;
+        var yBot = totalH/2 - topBottomBorder/2;
+
+        var topPerf = gc.addProperty("ADBE Vector Shape - Rect");
+        topPerf.name = "Top Perf " + (p+1);
+        topPerf.property("ADBE Vector Rect Size").setValue([perfW, perfH]);
+        topPerf.property("ADBE Vector Rect Position").setValue([xPos, yTop]);
+        topPerf.property("ADBE Vector Rect Roundness").setValue(perfRound);
+
+        var botPerf = gc.addProperty("ADBE Vector Shape - Rect");
+        botPerf.name = "Bot Perf " + (p+1);
+        botPerf.property("ADBE Vector Rect Size").setValue([perfW, perfH]);
+        botPerf.property("ADBE Vector Rect Position").setValue([xPos, yBot]);
+        botPerf.property("ADBE Vector Rect Roundness").setValue(perfRound);
+    }
+
+    var merge = gc.addProperty("ADBE Vector Filter - Merge");
+    merge.property("ADBE Vector Merge Type").setValue(3); // Subtract
+
+    var fill = gc.addProperty("ADBE Vector Graphic - Fill");
+    fill.property("ADBE Vector Fill Color").setValue([0,0,0,1]);
+
+    return shapeLayer;
+}
+
+function filmStripBuilder() {
+    // --- 0. Get selected footage FIRST - abort if none ---
+    var selection = app.project.selection;
+    var footageItems = [];
+    for (var s=0; s<selection.length; s++) {
+        var it = selection[s];
+        if (it instanceof FootageItem || (it instanceof AVItem && !(it instanceof CompItem))) {
+            if (it.mainSource && it.mainSource.isStill === false || it.mainSource && it.mainSource.isStill === true || true) {
+                footageItems.push(it);
+            }
+        } else if (it instanceof CompItem) {
+            footageItems.push(it);
+        }
+        if (footageItems.length >= 10) break;
+    }
+
+    // HARD STOP if no valid footage
+    if (footageItems.length === 0) {
+        alert("No valid footage/images selected in the Project panel.\n\nPlease select 1-10 images/videos in the Project panel and run the script again.\nScript will not create anything.");
+        return;
+    }
+
+    app.beginUndoGroup("Film Strip Builder");
+
+    // --- Check active comp for final step ---
+    var activeComp = app.project.activeItem;
+    var hasActiveComp = (activeComp && activeComp instanceof CompItem);
+
+    // --- 1. Single strip reference comp (like before) ---
+    var cellW = 1000;
+    var cellH = 800;
+    var numPerfs = 8;
+
+    var singleComp = app.project.items.addComp("Film Frame - Single", cellW, cellH, 1, 5, 30);
+    // reuse logic: quick single silhouette
+    (function(){
+        var comp = singleComp;
+        var shapeLayer = comp.layers.addShape();
+        shapeLayer.name = "Film Silhouette";
+        var contents = shapeLayer.property("ADBE Root Vectors Group");
+        var filmGroup = contents.addProperty("ADBE Vector Group");
+        var gc = filmGroup.property("ADBE Vectors Group");
+        var sideBorder = cellW * 0.025;
+        var topBottomBorder = cellH * 0.155;
+        var apertureW = cellW - (sideBorder * 2);
+        var apertureH = cellH - (topBottomBorder * 2);
+        var perfW = cellW * 0.067;
+        var perfH = topBottomBorder * 0.62;
+        var perfRound = perfW * 0.22;
+
+        var outer = gc.addProperty("ADBE Vector Shape - Rect");
+        outer.property("ADBE Vector Rect Size").setValue([cellW, cellH]);
+        outer.property("ADBE Vector Rect Position").setValue([0,0]);
+        var inner = gc.addProperty("ADBE Vector Shape - Rect");
+        inner.property("ADBE Vector Rect Size").setValue([apertureW, apertureH]);
+        inner.property("ADBE Vector Rect Position").setValue([0,0]);
+        var totalPerfArea = cellW - (sideBorder*2);
+        var spacing = totalPerfArea / numPerfs;
+        for(var i=0;i<numPerfs;i++){
+            var xPos = -cellW/2 + sideBorder + spacing*i + spacing/2;
+            var yTop = -cellH/2 + topBottomBorder/2;
+            var yBot = cellH/2 - topBottomBorder/2;
+            var tp = gc.addProperty("ADBE Vector Shape - Rect");
+            tp.property("ADBE Vector Rect Size").setValue([perfW, perfH]);
+            tp.property("ADBE Vector Rect Position").setValue([xPos, yTop]);
+            tp.property("ADBE Vector Rect Roundness").setValue(perfRound);
+            var bp = gc.addProperty("ADBE Vector Shape - Rect");
+            bp.property("ADBE Vector Rect Size").setValue([perfW, perfH]);
+            bp.property("ADBE Vector Rect Position").setValue([xPos, yBot]);
+            bp.property("ADBE Vector Rect Roundness").setValue(perfRound);
+        }
+        var merge = gc.addProperty("ADBE Vector Filter - Merge");
+        merge.property("ADBE Vector Merge Type").setValue(3);
+        var fill = gc.addProperty("ADBE Vector Graphic - Fill");
+        fill.property("ADBE Vector Fill Color").setValue([0,0,0,1]);
+    })();
+
+    // --- 2. Build extended list - cycle to fill 10 if less than 10 ---
+    var TARGET_FRAMES = 10;
+    var originalCount = footageItems.length;
+    var extendedFootage = [];
+    
+    // Cycle logic: 1-> [1,1,1,1,1,1,1,1,1,1], 3-> [1,2,3,1,2,3,1,2,3,1]
+    for (var c = 0; c < TARGET_FRAMES; c++) {
+        extendedFootage.push(footageItems[c % originalCount]);
+    }
+    
+    if (originalCount < TARGET_FRAMES) {
+        // Optional info - comment out if you don't want popup
+        // alert("Only " + originalCount + " footage selected. Cycling to fill " + TARGET_FRAMES + " frames.");
+    }
+
+    var numFrames = TARGET_FRAMES;
+    var longW = cellW * numFrames;
+    var longH = cellH;
+    var longComp = app.project.items.addComp("Film Strip - " + numFrames + " Frames (from " + originalCount + " sources)", longW, longH, 1, 10, 30);
+
+    // Add footage layers first (under silhouette)
+    var apertureW = cellW - (cellW * 0.025 * 2);
+    var apertureH = cellH - (cellH * 0.155 * 2);
+
+    for (var f=0; f<numFrames; f++) {
+        var ftg = extendedFootage[f];
+        var lyr = longComp.layers.add(ftg);
+        lyr.name = "Frame " + (f+1) + " - " + ftg.name;
+        lyr.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([ftg.width/2, ftg.height/2]);
+        // position at center of its cell
+        var posX = cellW/2 + f * cellW;
+        var posY = longH/2;
+        lyr.property("ADBE Transform Group").property("ADBE Position").setValue([posX, posY]);
+
+        // Scale to fill aperture (cover)
+        var scaleFactor = Math.max(apertureW / ftg.width, apertureH / ftg.height) * 100;
+        // If footage is comp, use 100% as base but same logic
+        if (ftg.width > 0) {
+            lyr.property("ADBE Transform Group").property("ADBE Scale").setValue([scaleFactor, scaleFactor]);
+        }
+        lyr.moveToBeginning(); // keep under next layers, silhouette will be moved to top after
+    }
+
+    // Now add silhouette on top
+    var silhouette = fsbCreateSilhouette(longComp, numFrames, cellW, cellH, numPerfs);
+    silhouette.moveToEnd(); // Actually move to top? In AE layers, end = bottom, beginning = top. So we want top.
+    // Correction: move to beginning to be on top
+    silhouette.moveToBeginning();
+    // Wait we moved footage to beginning earlier, so now move silhouette again to beginning to be absolute top
+    silhouette.moveToBeginning();
+
+    // --- 3. Add long comp into active comp with CC Lens ---
+    if (hasActiveComp) {
+        var filmLayer = activeComp.layers.add(longComp);
+        filmLayer.name = "Film Strip - " + numFrames + " Frames";
+        
+        // Center it
+        filmLayer.property("ADBE Transform Group").property("ADBE Position").setValue([activeComp.width/2, activeComp.height/2]);
+        // Fit width if too large
+        var fitScale = (activeComp.width * 0.9) / longW * 100;
+        if (fitScale < 100) {
+            filmLayer.property("ADBE Transform Group").property("ADBE Scale").setValue([fitScale, fitScale]);
+        }
+
+        // Add CC Lens
+        var effects = filmLayer.property("ADBE Effect Parade");
+        var ccLens = effects.addProperty("CC Lens");
+        if (ccLens) {
+            // Match names can vary by language, try to set by index/name
+            try {
+                ccLens.property("Size").setValue(400);
+                ccLens.property("Convergence").setValue(100);
+                ccLens.property("Center").setValue([activeComp.width/2, activeComp.height/2]);
+            } catch(e) {
+                // Fallback: try by index (Size is prop 1, Convergence 2, Center 3 usually)
+                try { ccLens.property(1).setValue(400); } catch(e2){}
+                try { ccLens.property(2).setValue(100); } catch(e2){}
+            }
+        } else {
+            alert("CC Lens effect not found. Add it manually: Size 400, Convergence 100");
+        }
+    } else {
+        alert("Long film strip created as '" + longComp.name + "'.\n\nOpen a comp and make it active, then run again to auto-add it with CC Lens, or drag it in manually.");
+    }
+
+    app.endUndoGroup();
 }
 
 // ─────────────────────────────────────────────────────────────
